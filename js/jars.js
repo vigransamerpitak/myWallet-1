@@ -44,7 +44,7 @@ function calculateEmergencyProgress() {
     const saveGoals = (loadedGoalsCache || []).filter(g => {
         let isSave = false;
         let goalType = g.type;
-        const typeMatch = g.title.match(/^\[(save_[a-zA-Z0-9_]+)\]\s*/);
+        const typeMatch = g.title.match(/^\[(save[a-zA-Z0-9_]*)\]\s*/);
         if (typeMatch || goalType === 'save') {
             isSave = true;
         }
@@ -58,7 +58,7 @@ function calculateEmergencyProgress() {
     saveGoals.forEach(goal => {
         let goalType = goal.type;
         let goalTitle = goal.title;
-        const typeMatch = goalTitle.match(/^\[(save_[a-zA-Z0-9_]+)\]\s*/);
+        const typeMatch = goalTitle.match(/^\[(save[a-zA-Z0-9_]*)\]\s*/);
         if (typeMatch) {
             goalType = typeMatch[1];
             goalTitle = goalTitle.replace(typeMatch[0], '');
@@ -171,11 +171,27 @@ function calculateEmergencyProgress() {
 
         jarsHtml += `
             <div class="savings-jar-item p-3 mb-3 bg-light rounded-4 border" style="background-color: var(--light-bg) !important; border-color: var(--card-border) !important; color: var(--color-text);">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="fw-bold text-dark d-flex align-items-center gap-1.5" style="font-size: 0.85rem; color: var(--text-dark) !important;">
-                        ${getGoalIcon(item.type)} ${item.title}
-                    </span>
-                    <span class="small text-muted fw-bold" style="font-size: 0.7rem;">เป้าหมาย: ${item.target.toLocaleString('th-TH')} บ.</span>
+                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap" style="gap: 8px;">
+                    <div class="d-flex align-items-center gap-1">
+                        <span class="fs-5">${getGoalIcon(item.type)}</span>
+                        <input type="text" id="subJarTitleInput-${item.id}"
+                            onchange="triggerUpdateSubJar(${item.id}, '${item.type}')"
+                            class="form-control form-control-sm fw-bold text-dark border-0 bg-transparent p-0"
+                            style="font-size: 0.85rem; width: auto; max-width: 140px; box-shadow: none !important; color: var(--text-dark) !important;"
+                            value="${item.title}" placeholder="พิมพ์ชื่อเป้าหมาย...">
+                        <i class="bi bi-pencil-fill text-muted cursor-pointer" style="font-size: 0.65rem;"
+                            onclick="document.getElementById('subJarTitleInput-${item.id}').focus()"
+                            title="คลิกเพื่อแก้ไขชื่อกระปุก"></i>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <span class="small text-muted" style="font-size: 0.7rem;">เป้าหมาย:</span>
+                        <input type="number" id="subJarAmountInput-${item.id}"
+                            onchange="triggerUpdateSubJar(${item.id}, '${item.type}')"
+                            class="form-control form-control-xs py-0.5 px-2 fw-bold text-dark border-secondary"
+                            style="width: 75px; font-size: 0.7rem; border-radius: 8px !important; display: inline-block; color: var(--text-dark) !important;"
+                            value="${item.target}">
+                        <span class="small text-muted" style="font-size: 0.7rem;">บ.</span>
+                    </div>
                 </div>
                 <div class="row align-items-center g-2">
                     <div class="col-3 text-center">
@@ -248,4 +264,52 @@ function renderJarsLoadingSkeleton() {
         `;
     }
     container.innerHTML = skeletonHtml;
+}
+
+/**
+ * 💾 ฟังก์ชันบันทึกการแก้ไขชื่อเป้าหมายและจำนวนเงินเป้าหมายของกระปุกย่อยลง Supabase
+ */
+async function triggerUpdateSubJar(id, type) {
+    const titleInput = document.getElementById(`subJarTitleInput-${id}`);
+    const amountInput = document.getElementById(`subJarAmountInput-${id}`);
+    if (!titleInput || !amountInput) return;
+
+    const newTitle = titleInput.value.trim();
+    const newAmount = parseFloat(amountInput.value);
+
+    if (!newTitle) {
+        showToast('กรุณากรอกชื่อกระปุกด้วยครับ', '⚠️', true);
+        return;
+    }
+    if (isNaN(newAmount) || newAmount <= 0) {
+        showToast('กรุณากรอกเป้าหมายจำนวนเงินให้ถูกต้อง', '🔢', true);
+        return;
+    }
+
+    // ลบ prefix ที่ติดมากับชื่อ (เช่น [save] หรือ [save_travel]) ก่อนเพื่อป้องกันการซ้ำซ้อน
+    let cleanTitle = newTitle.replace(/^(\[[a-zA-Z0-9_]+\]\s*)+/, '').trim();
+
+    let dbTitle = cleanTitle;
+    // ตรวจสอบประเภทและใส่ Prefix กลับไปเฉพาะตัวที่ไม่ใช่ 'save' หรือ 'bill' เพื่อความคงเส้นคงวาของระบบหลัก
+    if (type && type !== 'save' && type !== 'bill') {
+        dbTitle = `[${type}] ${cleanTitle}`;
+    }
+
+    try {
+        const { error } = await supabaseClient
+            .from('goals')
+            .update({ title: dbTitle, amount: newAmount })
+            .eq('id', id);
+
+        if (error) {
+            showToast('อัปเดตกระปุกไม่สำเร็จ: ' + error.message, '❌', true);
+        } else {
+            showToast('อัปเดตเป้าหมายกระปุกเงินเรียบร้อยแล้วจ้า! 🎯', '✅');
+            // โหลดข้อมูลเควสและการเงินใหม่ทั้งหมด
+            if (typeof loadGoals === 'function') await loadGoals();
+            if (typeof loadTransactions === 'function') await loadTransactions();
+        }
+    } catch (err) {
+        console.error("Error updating sub jar:", err);
+    }
 }

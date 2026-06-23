@@ -4,7 +4,37 @@
 let filterOwner = 'all';
 let filterType = 'all';
 let filterDate = 'this-month';
-let currentUserRole = 'me';
+var currentUserRole = window.currentUserRole || 'me';
+
+window.initUserIdentity = function(userId) {
+    const boatId = '4ffee1dd-ff34-47c0-a623-7dcc76d80c0f';
+    if (userId === boatId) {
+        currentUserRole = 'me';
+    } else {
+        currentUserRole = 'partner';
+    }
+
+    // ตรวจสอบข้อมูลอีเมลจาก local storage session เผื่อความถูกต้องในการตรวจจับคู่รัก
+    try {
+        const sessionTokenKey = Object.keys(localStorage).find(key => key.startsWith('sb-') && key.endsWith('-auth-token'));
+        if (sessionTokenKey) {
+            const sessionData = JSON.parse(localStorage.getItem(sessionTokenKey));
+            const email = sessionData?.user?.email || '';
+            if (email.includes('boat') || email.includes('vigran')) {
+                currentUserRole = 'me';
+            } else if (email) {
+                currentUserRole = 'partner';
+            }
+        }
+    } catch (e) {
+        console.error("Error matching role from email session:", e);
+    }
+
+    if (typeof applyDynamicNames === 'function') {
+        applyDynamicNames();
+    }
+};
+
 let isSaving = false; // ป้องกันดับเบิลคลิกบันทึกซ้ำ
 let currentSortField = 'date';
 let currentSortOrder = 'desc';
@@ -1092,7 +1122,7 @@ async function loadGoals() {
     goals.forEach(goal => {
         let goalType = goal.type;
         let goalTitle = goal.title;
-        const typeMatch = goalTitle.match(/^\[(save_[a-zA-Z0-9_]+)\]\s*/);
+        const typeMatch = goalTitle.match(/^\[(save[a-zA-Z0-9_]*)\]\s*/);
         if (typeMatch) {
             goalType = typeMatch[1];
             goalTitle = goalTitle.replace(typeMatch[0], '');
@@ -1146,7 +1176,7 @@ async function settleGoal(id, status, title, amount, type) {
         realAmount = goalData.amount;
         realType = goalData.type;
         
-        const typeMatch = realTitle.match(/^\[(save_[a-zA-Z0-9_]+)\]\s*/);
+        const typeMatch = realTitle.match(/^\[(save[a-zA-Z0-9_]*)\]\s*/);
         if (typeMatch) {
             realType = typeMatch[1];
             realTitle = realTitle.replace(typeMatch[0], '');

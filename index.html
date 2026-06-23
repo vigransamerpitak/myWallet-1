@@ -49,6 +49,15 @@
             });
         }
 
+        // ⏳ กำหนดสิทธิ์ผู้ใช้งานเบื้องต้น ป้องกันค้างหน้าโหลดหมุนติ้วๆ
+        window.initUserIdentity = window.initUserIdentity || function (userId) {
+            const boatId = '4ffee1dd-ff34-47c0-a623-7dcc76d80c0f';
+            window.currentUserRole = (userId === boatId) ? 'me' : 'partner';
+            if (typeof applyDynamicNames === 'function') {
+                applyDynamicNames();
+            }
+        };
+
         // ⏳ ตรวจสอบ Auth หลังจากระบบ Supabase สตาร์ทเครื่องติดแล้ว
         async function checkUserAuth() {
             setTimeout(async () => {
@@ -218,8 +227,8 @@
                 </div>
                 <div class="col-12 col-md-6">
                     <div class="premium-card mb-0 h-100" id="aiInsightCard"
-                        style="border: 1px solid rgba(99, 102, 241, 0.25) !important;">
-                        <div class="d-flex align-items-start gap-3">
+                        style="border: 1px solid rgba(99, 102, 241, 0.25) !important; display: flex; flex-direction: column; justify-content: space-between; gap: 16px;">
+                        <div class="d-flex align-items-start gap-3 flex-fill">
                             <!-- มาสคอตหมีขยับได้ -->
                             <div class="bear-mascot-wrapper text-center">
                                 <div id="bearMascot" class="bear-mascot animated-bounce" style="font-size: 3rem;">🐻</div>
@@ -250,6 +259,18 @@
                                     </button>
                                 </div>
                             </div>
+                        </div>
+                        
+                        <!-- 💡 กล่องข้อคิดการเงินคู่รักสุดพรีเมียม (ช่วยลดพื้นที่โล่งและเพิ่มความน่ารัก) -->
+                        <div class="p-3 rounded-4 mt-auto mascot-quote-box" 
+                             style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.04), rgba(244, 63, 94, 0.04)); border: 1px dashed rgba(99, 102, 241, 0.2); transition: all 0.3s ease;">
+                            <div class="d-flex align-items-center gap-2 mb-1.5">
+                                <span class="fs-5">💡</span>
+                                <span class="fw-bold text-indigo" style="font-size: 0.8rem; letter-spacing: 0.5px;">ข้อคิดการเงินฉบับคู่รักวันนี้</span>
+                            </div>
+                            <p id="mascotQuoteText" class="small mb-0 text-secondary" style="font-style: italic; line-height: 1.45;">
+                                "การคุยเรื่องเงินอย่างเปิดเผย คือความลับชีวิตคู่ที่ยืนยาวนะจ๊ะ 💖"
+                            </p>
                         </div>
                     </div>
                 </div>
