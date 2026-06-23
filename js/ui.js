@@ -217,8 +217,12 @@ function initDynamicNames() {
  * ⚙️ กดบันทึกชื่อผู้ใช้และคู่รักใหม่ พร้อมรีเฟรชหน้าจอข้อมูล
  */
 function saveDynamicNames() {
-    const nameMe = document.getElementById('inputNameMe').value.trim() || 'คุณโบ๊ท';
-    const namePartner = document.getElementById('inputNamePartner').value.trim() || 'คุณเอิร์น';
+    const inputMe = document.getElementById('inputNameMe');
+    const inputPartner = document.getElementById('inputNamePartner');
+    if (!inputMe || !inputPartner) return;
+    
+    const nameMe = inputMe.value.trim() || 'คุณโบ๊ท';
+    const namePartner = inputPartner.value.trim() || 'คุณเอิร์น';
     
     localStorage.setItem('nameMe', nameMe);
     localStorage.setItem('namePartner', namePartner);
