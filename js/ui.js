@@ -267,7 +267,7 @@ function applyDynamicNames() {
     // ยอดผู้เปิดใช้ระบบปัจจุบัน
     const userDisplay = document.getElementById('userDisplay');
     if (userDisplay) {
-        if (currentUserRole === 'me') {
+        if (window.currentUserRole === 'me') {
             userDisplay.innerHTML = `🙋‍♂️ ผู้ใช้งานระบบปัจจุบัน: <span class="text-primary">${nameMe}</span>`;
         } else {
             userDisplay.innerHTML = `🙋‍♀️ ผู้ใช้งานระบบปัจจุบัน: <span class="text-danger">${namePartner}</span>`;
@@ -325,8 +325,8 @@ async function sendSystemHugToPartner() {
     const nameMe = localStorage.getItem('nameMe') || 'คุณโบ๊ท';
     const namePartner = localStorage.getItem('namePartner') || 'คุณเอิร์น';
     
-    let senderName = currentUserRole === 'me' ? nameMe : namePartner;
-    let receiverName = currentUserRole === 'me' ? namePartner : nameMe;
+    let senderName = window.currentUserRole === 'me' ? nameMe : namePartner;
+    let receiverName = window.currentUserRole === 'me' ? namePartner : nameMe;
     
     const message = `คุณ${senderName} ส่งอ้อมกอดอุ่นๆ และกำลังใจก้อนโตมาให้คุณ${receiverName}นะ! 🫂💖`;
     const noteContent = `[SYSTEM_HUG] ${message}`;

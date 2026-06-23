@@ -42,6 +42,7 @@ function calculateEmergencyProgress() {
 
     // 3. กรองเฉพาะเป้าหมายย่อยที่เป็นประเภท save_* (เควสออมเงิน)
     const saveGoals = (loadedGoalsCache || []).filter(g => {
+        if (!g || !g.title) return false;
         let isSave = false;
         let goalType = g.type;
         const typeMatch = g.title.match(/^\[(save[a-zA-Z0-9_]*)\]\s*/);
@@ -56,6 +57,7 @@ function calculateEmergencyProgress() {
 
     // 4. คำนวณเงินสะสมของกระปุกย่อยแต่ละโหล
     saveGoals.forEach(goal => {
+        if (!goal || !goal.title) return;
         let goalType = goal.type;
         let goalTitle = goal.title;
         const typeMatch = goalTitle.match(/^\[(save[a-zA-Z0-9_]*)\]\s*/);

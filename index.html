@@ -86,7 +86,7 @@
                     }
                 }
 
-                if (!session) {
+                if (!session || !session.user || !session.user.id) {
                     window.location.href = 'login.html';
                 } else {
                     initUserIdentity(session.user.id);

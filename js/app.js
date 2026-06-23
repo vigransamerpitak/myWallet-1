@@ -1120,6 +1120,7 @@ async function loadGoals() {
     }
     
     goals.forEach(goal => {
+        if (!goal || !goal.title) return;
         let goalType = goal.type;
         let goalTitle = goal.title;
         const typeMatch = goalTitle.match(/^\[(save[a-zA-Z0-9_]*)\]\s*/);
@@ -1171,7 +1172,7 @@ async function settleGoal(id, status, title, amount, type) {
     let realType = type;
     
     const { data: goalData, error: fetchError } = await supabaseClient.from('goals').select('title, amount, type').eq('id', id).single();
-    if (!fetchError && goalData) {
+    if (!fetchError && goalData && goalData.title) {
         realTitle = goalData.title;
         realAmount = goalData.amount;
         realType = goalData.type;
