@@ -41,7 +41,7 @@ let currentSortOrder = 'desc';
 
 // Pagination State
 let currentPage = 1;
-const ROWS_PER_PAGE = 20;
+const ROWS_PER_PAGE = 5;
 let filteredTxsCache = []; // ประวัติที่กรองแล้วใช้สำหรับแบ่งหน้าและส่งออก
 
 // Data Caches
@@ -302,7 +302,7 @@ function updateSortHeadersUI() {
 // === 📄 Pagination rendering (การแบ่งหน้าของตารางรายการ) ===
 
 function renderPaginationControls(totalPages) {
-    const nav = document.getElementById('paginationNav');
+    const nav = document.getElementById('paginationArea');
     if (!nav) return;
     nav.innerHTML = '';
 

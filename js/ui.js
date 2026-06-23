@@ -332,10 +332,13 @@ async function sendSystemHugToPartner() {
     let senderName = window.currentUserRole === 'me' ? nameMe : namePartner;
     let receiverName = window.currentUserRole === 'me' ? namePartner : nameMe;
     
-    const message = `คุณ${senderName} ส่งอ้อมกอดอุ่นๆ และกำลังใจก้อนโตมาให้คุณ${receiverName}นะ! 🫂💖`;
+    let senderLabel = senderName.startsWith('คุณ') ? senderName : `คุณ${senderName}`;
+    let receiverLabel = receiverName.startsWith('คุณ') ? receiverName : `คุณ${receiverName}`;
+    
+    const message = `${senderLabel} ส่งอ้อมกอดอุ่นๆ และกำลังใจก้อนโตมาให้${receiverLabel}นะ! ❤️💖`;
     const noteContent = `[SYSTEM_HUG] ${message}`;
     
-    showToast('กำลังส่งอ้อมกอดให้แฟน...', '🫂');
+    showToast('กำลังส่งอ้อมกอดให้แฟน...', '❤️');
     isSaving = true;
     
     try {
@@ -352,7 +355,7 @@ async function sendSystemHugToPartner() {
             
         if (error) throw error;
         
-        showToast('ส่งอ้อมกอดให้แฟนเรียบร้อยแล้วจ้า! 🫂❤️', '💖');
+        showToast('ส่งอ้อมกอดให้แฟนเรียบร้อยแล้วจ้า! ❤️', '💖');
         triggerCelebration();
         if (typeof loadTransactions === 'function') loadTransactions();
     } catch (err) {
