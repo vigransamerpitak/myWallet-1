@@ -721,3 +721,90 @@ body {
 .fb-skeleton-row td {
     padding: 12px 8px !important;
 }
+
+/* ==================== 📢 HIDDEN SCROLLBARS (PREMIUM APP STYLE) ==================== */
+/* ซ่อนแถบเลื่อนทั้งหมดทั่วทั้งเว็บเพื่อให้ดีไซน์ดูคลีนสะดุดตาแบบแอปพลิเคชันพรีเมียม แต่ยังสามารถเลื่อนอ่านข้อมูลได้ปกติ */
+* {
+    scrollbar-width: none !important; /* สำหรับ Firefox */
+    -ms-overflow-style: none !important; /* สำหรับ IE และ Edge รุ่นเก่า */
+}
+
+*::-webkit-scrollbar {
+    display: none !important; /* สำหรับ Chrome, Safari, Edge, Opera */
+    width: 0 !important;
+    height: 0 !important;
+}
+
+/* คืนค่าลักษณะการเลื่อนหน้าจอแบบนุ่มนวล (Smooth Scrolling) */
+html, body, .overflow-y-auto, #savingsJarsContainer, #goalsList, #recurringBillsList {
+    scroll-behavior: smooth;
+}
+
+/* ==================== 📢 CUSTOM PREMIUM MODAL DIALOG ==================== */
+.custom-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.35);
+    z-index: 11000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(8px);
+    transition: opacity 0.3s ease;
+}
+
+.custom-dialog-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 28px;
+    width: 90%;
+    max-width: 380px;
+    padding: 2.2rem 2rem 1.8rem 2rem;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+    transform: scale(0.9);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.custom-dialog-overlay:not(.d-none) .custom-dialog-card {
+    transform: scale(1);
+}
+
+.custom-dialog-icon-wrapper {
+    width: 64px;
+    height: 64px;
+    background: rgba(99, 102, 241, 0.08);
+    color: #6366f1;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.custom-dialog-icon {
+    font-size: 1.85rem;
+}
+
+.custom-dialog-card .btn-light {
+    background: var(--light-bg);
+    border: 1px solid var(--card-border);
+    color: var(--color-text);
+}
+
+.custom-dialog-card .btn-light:hover {
+    background: var(--bg-body);
+}
+
+[data-theme="dark"] .custom-dialog-card .btn-light {
+    background: #1c274c;
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #cbd5e1;
+}
+
+[data-theme="dark"] .custom-dialog-card .btn-light:hover {
+    background: #0b1329;
+}

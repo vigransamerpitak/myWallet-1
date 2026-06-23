@@ -358,3 +358,87 @@ async function sendSystemHugToPartner() {
         isSaving = false;
     }
 }
+
+/**
+ * 📢 แสดงกล่องคำถามกดยืนยัน (Custom Confirm Dialog) สไตล์มินิมอลพรีเมียม
+ * @param {string} message - ข้อความแจ้งเตือน
+ * @param {string} title - หัวข้อแจ้งเตือน (ค่าเริ่มต้น: 'ยืนยันการทำรายการ')
+ * @param {string} icon - อีโมจิประจำประเภทการกระทำ (ค่าเริ่มต้น: '❓')
+ * @returns {Promise<boolean>} คืนค่า true เมื่อกดตกลง และ false เมื่อกดยกเลิก
+ */
+function showCustomConfirm(message, title = 'ยืนยันการทำรายการ', icon = '❓') {
+    return new Promise((resolve) => {
+        const overlay = document.getElementById('customDialogOverlay');
+        const titleEl = document.getElementById('customDialogTitle');
+        const messageEl = document.getElementById('customDialogMessage');
+        const iconEl = document.getElementById('customDialogIcon');
+        const confirmBtn = document.getElementById('customDialogConfirmBtn');
+        const cancelBtn = document.getElementById('customDialogCancelBtn');
+        
+        if (!overlay || !titleEl || !messageEl || !iconEl || !confirmBtn || !cancelBtn) {
+            resolve(window.confirm ? window.confirm(message) : true);
+            return;
+        }
+
+        titleEl.innerText = title;
+        messageEl.innerText = message;
+        iconEl.innerText = icon;
+        
+        cancelBtn.classList.remove('d-none');
+        confirmBtn.className = "btn btn-indigo rounded-3 px-4 py-2 fw-semibold w-50";
+        cancelBtn.className = "btn btn-light rounded-3 px-4 py-2 fw-semibold w-50";
+
+        overlay.classList.remove('d-none');
+
+        const cleanUp = (result) => {
+            overlay.classList.add('d-none');
+            confirmBtn.onclick = null;
+            cancelBtn.onclick = null;
+            resolve(result);
+        };
+
+        confirmBtn.onclick = () => cleanUp(true);
+        cancelBtn.onclick = () => cleanUp(false);
+    });
+}
+
+/**
+ * 📢 แสดงกล่องแจ้งเตือน (Custom Alert Dialog) สไตล์มินิมอลพรีเมียม
+ * @param {string} message - ข้อความแจ้งเตือน
+ * @param {string} title - หัวข้อแจ้งเตือน (ค่าเริ่มต้น: 'แจ้งเตือนระบบ')
+ * @param {string} icon - อีโมจิประจำประเภทการกระทำ (ค่าเริ่มต้น: '⚠️')
+ * @returns {Promise<void>} คืนค่าเมื่อผู้ใช้กดปิด
+ */
+function showCustomAlert(message, title = 'แจ้งเตือนระบบ', icon = '⚠️') {
+    return new Promise((resolve) => {
+        const overlay = document.getElementById('customDialogOverlay');
+        const titleEl = document.getElementById('customDialogTitle');
+        const messageEl = document.getElementById('customDialogMessage');
+        const iconEl = document.getElementById('customDialogIcon');
+        const confirmBtn = document.getElementById('customDialogConfirmBtn');
+        const cancelBtn = document.getElementById('customDialogCancelBtn');
+        
+        if (!overlay || !titleEl || !messageEl || !iconEl || !confirmBtn || !cancelBtn) {
+            if (window.alert) window.alert(message);
+            resolve();
+            return;
+        }
+
+        titleEl.innerText = title;
+        messageEl.innerText = message;
+        iconEl.innerText = icon;
+
+        cancelBtn.classList.add('d-none');
+        confirmBtn.className = "btn btn-indigo rounded-3 px-4 py-2 fw-semibold w-100";
+
+        overlay.classList.remove('d-none');
+
+        const cleanUp = () => {
+            overlay.classList.add('d-none');
+            confirmBtn.onclick = null;
+            resolve();
+        };
+
+        confirmBtn.onclick = () => cleanUp();
+    });
+}

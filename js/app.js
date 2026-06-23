@@ -993,7 +993,7 @@ async function submitEditTransaction() {
 
 // 5. ลบแถวรายการข้อมูลออกจากฐานข้อมูล
 async function deleteTransaction(id) {
-    if (!confirm('คุณแน่ใจใช่ไหมที่จะลบประวัติรายการเงินแถวนี้ทิ้งอย่างถาวร?\n(หากเป็นรายการโอนเงินข้ามบัญชี รายการเงินฝั่งคู่โอนจะถูกลบออกด้วยอัตโนมัติ)')) return;
+    if (!(await showCustomConfirm('คุณแน่ใจใช่ไหมที่จะลบประวัติรายการเงินแถวนี้ทิ้งอย่างถาวร?\n(หากเป็นรายการโอนเงินข้ามบัญชี รายการเงินฝั่งคู่โอนจะถูกลบออกด้วยอัตโนมัติ)', 'ยืนยันการลบรายการ', '🗑️'))) return;
 
     const deleteBtn = document.querySelector(`[data-delete-id="${id}"]`);
     if (deleteBtn) { deleteBtn.disabled = true; deleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>'; }
@@ -1185,7 +1185,7 @@ async function settleGoal(id, status, title, amount, type) {
     }
 
     if (status === 'success') {
-        if (!confirm(`ยืนยันทำเควสสำเร็จ: "${realTitle}"?\nระบบจะสร้างธุรกรรมออม/จ่ายเงินให้อัตโนมัติ`)) return;
+        if (!(await showCustomConfirm(`ยืนยันทำเควสสำเร็จ: "${realTitle}"?\nระบบจะสร้างธุรกรรมออม/จ่ายเงินให้อัตโนมัติ`, 'ทำภารกิจสำเร็จ', '🏆'))) return;
         const { error } = await supabaseClient.from('goals').update({ is_completed: true, is_failed: false }).eq('id', id);
         if (error) return showToast(error.message, '❌', true);
         
@@ -1227,7 +1227,7 @@ async function settleGoal(id, status, title, amount, type) {
         }
         triggerCelebration();
     } else {
-        if (!confirm(`เดือนนี้ล้มเหลว/ข้ามภารกิจ: "${realTitle}" ใช่ไหม?`)) return;
+        if (!(await showCustomConfirm(`เดือนนี้ล้มเหลว/ข้ามภารกิจ: "${realTitle}" ใช่ไหม?`, 'ข้ามภารกิจ', '📁'))) return;
         const { error } = await supabaseClient.from('goals').update({ is_completed: false, is_failed: true }).eq('id', id);
         if (error) return showToast(error.message, '❌', true);
         showToast('บันทึกสถิติข้ามเควสแล้ว ❌', '📁');
@@ -1240,7 +1240,7 @@ async function resetGoalStatus(id, title) {
     const { data: goalData, error: fetchError } = await supabaseClient.from('goals').select('title').eq('id', id).single();
     if (!fetchError && goalData) { realTitle = goalData.title; }
 
-    if (!confirm(`คุณต้องการยกเลิกสถานะของภารกิจ "${realTitle}" เพื่อกลับไปเลือกกดใหม่ ใช่หรือไม่?\n(ระบบจะลบรายการเงินที่เคยบันทึกให้อัตโนมัติ)`)) return;
+    if (!(await showCustomConfirm(`คุณต้องการยกเลิกสถานะของภารกิจ "${realTitle}" เพื่อกลับไปเลือกกดใหม่ ใช่หรือไม่?\n(ระบบจะลบรายการเงินที่เคยบันทึกให้อัตโนมัติ)`, 'รีเซ็ตสถานะภารกิจ', '↩️'))) return;
     
     const { error: goalError } = await supabaseClient.from('goals').update({ is_completed: false, is_failed: false }).eq('id', id);
     if (goalError) return showToast(goalError.message, '❌', true);
@@ -1258,7 +1258,7 @@ async function resetGoalStatus(id, title) {
 }
 
 async function deleteGoalFrontend(id) {
-    if (!confirm('ต้องการลบภารกิจนี้ออกจากหน้าจอใช่ไหมครับ?')) return;
+    if (!(await showCustomConfirm('ต้องการลบภารกิจนี้ออกจากหน้าจอใช่ไหมครับ?', 'ลบภารกิจ', '🗑️'))) return;
     const { error } = await supabaseClient.from('goals').delete().eq('id', id);
     if (error) showToast(error.message, '❌', true);
     else { showToast('ลบภารกิจออกแล้ว', '🗑️'); await loadGoals(); }
@@ -1314,8 +1314,8 @@ function saveNewBill() {
     showToast('เพิ่มรายการบิลประจำเรียบร้อยแล้วจ้า! 📅', '✅');
 }
 
-function deleteBill(index) {
-    if (!confirm(`ต้องการลบรายการบิล "${recurringBills[index].title}" ใช่หรือไม่?`)) return;
+async function deleteBill(index) {
+    if (!(await showCustomConfirm(`ต้องการลบรายการบิล "${recurringBills[index].title}" ใช่หรือไม่?`, 'ลบบิลประจำ', '🗑️'))) return;
     recurringBills.splice(index, 1);
     localStorage.setItem('recurringBills', JSON.stringify(recurringBills));
     renderRecurringBills();
@@ -1335,7 +1335,7 @@ function getCategoryForBill(title) {
 
 async function payBill(index) {
     const bill = recurringBills[index];
-    if (!confirm(`ยืนยันจ่ายบิลประจำสำหรับ: "${bill.title}" ยอดเงิน ${bill.amount.toLocaleString()} บาท?\n(ระบบจะสร้างธุรกรรมรายจ่ายให้อัตโนมัติ)`)) return;
+    if (!(await showCustomConfirm(`ยืนยันจ่ายบิลประจำสำหรับ: "${bill.title}" ยอดเงิน ${bill.amount.toLocaleString()} บาท?\n(ระบบจะสร้างธุรกรรมรายจ่ายให้อัตโนมัติ)`, 'ยืนยันจ่ายบิล', '💳'))) return;
 
     const now = new Date();
     const monthYearKey = `${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getFullYear()}`;
@@ -1483,10 +1483,10 @@ function drawWheel(angle) {
     ctx.fillText("🎰", radius, radius);
 }
 
-function spinWheel() {
+async function spinWheel() {
     if (isSpinning) return;
     const ongoing = localStorage.getItem('ongoingQuest');
-    if (ongoing) { alert("คุณมีภารกิจคาอยู่นะ ทำภารกิจปัจจุบันให้เสร็จ หรือกดยอมแพ้ก่อนสปินใหม่น้าา!"); return; }
+    if (ongoing) { await showCustomAlert("คุณมีภารกิจคาอยู่นะ ทำภารกิจปัจจุบันให้เสร็จ หรือกดยอมแพ้ก่อนสปินใหม่น้าา!", "มีภารกิจค้างอยู่", "🐻"); return; }
     
     isSpinning = true;
     const btn = document.getElementById("btnSpin");
@@ -1614,8 +1614,8 @@ async function completeQuest() {
     loadTransactions();
 }
 
-function forfeitQuest() {
-    if (confirm("แน่ใจหรอว่าจะยอมแพ้ภารกิจนี้? พี่หมีเสียใจน้าา 🐻💔")) {
+async function forfeitQuest() {
+    if (await showCustomConfirm("แน่ใจหรอว่าจะยอมแพ้ภารกิจนี้? พี่หมีเสียใจน้าา 🐻💔", "ยอมแพ้ภารกิจ", "🐻💔")) {
         localStorage.removeItem("ongoingQuest");
         renderQuestState();
         showToast("ยกเลิกภารกิจแล้ว เริ่มหมุนใหม่ได้เลยครับ", "🍃");
@@ -1690,8 +1690,8 @@ async function saveSplitBill() {
     const title = document.getElementById("splitTitle").value.trim();
     const amtInput = document.getElementById("splitAmount").value;
     
-    if (!title) return alert("กรุณากรอกชื่อรายการค่าใช้จ่าย!");
-    if (!amtInput || parseFloat(amtInput) <= 0) return alert("กรุณากรอกยอดเงินรวมให้ถูกต้อง!");
+    if (!title) { await showCustomAlert("กรุณากรอกชื่อรายการค่าใช้จ่าย!", "ข้อมูลไม่ครบถ้วน", "⚠️"); return; }
+    if (!amtInput || parseFloat(amtInput) <= 0) { await showCustomAlert("กรุณากรอกยอดเงินรวมให้ถูกต้อง!", "ยอดเงินไม่ถูกต้อง", "🔢"); return; }
     
     const amount = parseFloat(amtInput);
     const payer = document.getElementById("splitPayer").value;
@@ -1711,7 +1711,7 @@ async function saveSplitBill() {
     const nameMe = localStorage.getItem("nameMe") || "คุณโบ๊ท";
     const namePartner = localStorage.getItem("namePartner") || "คุณเอิร์น";
     
-    if (!confirm(`ต้องการบันทึกค่าใช้จ่าย "${title}" ยอดเงิน ${amount.toLocaleString()} บ. (สัดส่วน โบ๊ท ${mePct}% : เอิร์น ${partnerPct}%) เข้ากองกลาง?`)) return;
+    if (!(await showCustomConfirm(`ต้องการบันทึกค่าใช้จ่าย "${title}" ยอดเงิน ${amount.toLocaleString()} บ. (สัดส่วน โบ๊ท ${mePct}% : เอิร์น ${partnerPct}%) เข้ากองกลาง?`, 'บันทึกค่าใช้จ่ายกองกลาง', '🤝'))) return;
 
     let prefix = payer === "me" ? "[จ่ายโดย: me]" : "[จ่ายโดย: partner]";
     let finalNote = `${prefix} [หารค่าใช้จ่าย] ${title} (สัดส่วน โบ๊ท ${mePct}% : เอิร์น ${partnerPct}%)`;
