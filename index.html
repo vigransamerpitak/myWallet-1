@@ -17,15 +17,15 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" href="css/style.css?v=3">
+    <link rel="stylesheet" href="css/style.css?v=5">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script src="config.js?v=3"></script>
-    <script src="js/utils.js?v=3" defer></script>
-    <script src="js/ui.js?v=3" defer></script>
-    <script src="js/jars.js?v=3" defer></script>
-    <script src="js/mascot.js?v=3" defer></script>
-    <script src="js/app.js?v=3" defer></script>
+    <script src="config.js?v=5"></script>
+    <script src="js/utils.js?v=5" defer></script>
+    <script src="js/ui.js?v=5" defer></script>
+    <script src="js/jars.js?v=5" defer></script>
+    <script src="js/mascot.js?v=5" defer></script>
+    <script src="js/app.js?v=5" defer></script>
     <script>
         // 🌓 ตั้งค่าธีมทันทีก่อนเรนเดอร์หน้าจอเพื่อหลีกเลี่ยงแสงแฟลชสีขาว
         const savedTheme = localStorage.getItem('theme') || 'light';
@@ -498,7 +498,7 @@
                         <label for="txAmount" class="form-label small fw-bold text-secondary mb-1">จำนวนเงิน
                             (บาท)</label>
                         <input type="number" id="txAmount" step="0.01" inputmode="decimal" placeholder="0.00"
-                            class="form-control form-control-lg fw-bold text-dark">
+                            class="form-control form-control-lg fw-bold">
                         <!-- ปุ่มลัดจำนวนเงินด่วน -->
                         <div class="preset-container">
                             <button type="button" onclick="adjustAmount(20)" class="preset-btn">+20</button>
@@ -573,7 +573,7 @@
                     <label for="txCategory" class="form-label small fw-bold text-warning-emphasis mb-1">🏷️
                         ระบุ/แก้ไขหมวดหมู่รายการ</label>
                     <select id="txCategory"
-                        class="form-select form-control-lg fw-bold border-warning border-opacity-25 bg-white text-dark">
+                        class="form-select form-control-lg fw-bold border-warning border-opacity-25">
                         <!-- โหลดหมวดหมู่ไดนามิกผ่าน JS -->
                     </select>
                 </div>
@@ -585,7 +585,7 @@
                         ออมเงินครั้งนี้เพื่ออะไร? (เช่น เก็บเงินค่าท่องเที่ยว, ค่าของขวัญ)</label>
                     <input type="text" id="txSavingPurpose"
                         placeholder="ระบุวัตถุประสงค์ (เช่น ทริปเชียงใหม่, ลำโพงบลูทูธใหม่)"
-                        class="form-control form-control-lg border-success border-opacity-25 bg-white">
+                        class="form-control form-control-lg border-success border-opacity-25">
                 </div>
 
                 <!-- ⚙️ ระบบหักออมอัตโนมัติเมื่อมีรายรับ -->
@@ -829,7 +829,7 @@
                                 <label for="splitAmount"
                                     class="form-label small fw-bold text-secondary mb-1">จำนวนเงินรวม (บาท)</label>
                                 <input type="number" id="splitAmount" step="0.01" inputmode="decimal" placeholder="0.00"
-                                    class="form-control fw-bold text-dark" oninput="calculateSplitResult()">
+                                    class="form-control fw-bold" oninput="calculateSplitResult()">
                             </div>
 
                             <div class="row g-2 mb-3">

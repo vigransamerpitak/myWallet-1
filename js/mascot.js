@@ -64,10 +64,19 @@ function calculateAIInsights(txs, totalMePaidShared, totalPartnerPaidShared, goa
         const pct = ((highestCatAmt / totalExp) * 100).toFixed(0);
         const emoji = getCategoryEmoji(highestCatName);
         if (pct >= 30) {
-            isWarningCategory = true;
-            insights.push(`💡 ว๊าย! ${label}พวกเราช็อป/ใช้จ่ายกับหมวด <b>${emoji}</b> เยอะเป็นพิเศษถึง <b>${pct}%</b> ของกระเป๋ารวมเลยนะ (${highestCatAmt.toLocaleString('th-TH')} บ.) เพลาๆ กันหน่อยน้า 🐻💦`);
+            if (highestCatName === 'ลงทุน') {
+                isWarningCategory = false;
+                insights.push(`💡 ว้าว! ${label}พวกเราเน้นเก็บออมและลงทุนในหมวด <b>${emoji}</b> เยอะเป็นพิเศษถึง <b>${pct}%</b> ของกระเป๋ารวมเลยนะ (${highestCatAmt.toLocaleString('th-TH')} บ.) เก่งมากๆ ช่วยกันออมต่อไปน้า 🐻💖`);
+            } else {
+                isWarningCategory = true;
+                insights.push(`💡 ว๊าย! ${label}พวกเราช็อป/ใช้จ่ายกับหมวด <b>${emoji}</b> เยอะเป็นพิเศษถึง <b>${pct}%</b> ของกระเป๋ารวมเลยนะ (${highestCatAmt.toLocaleString('th-TH')} บ.) เพลาๆ กันหน่อยน้า 🐻💦`);
+            }
         } else {
-            insights.push(`💡 ${label}เราใช้จ่ายกับหมวด <b>${emoji}</b> เยอะที่สุดนะ คิดเป็น <b>${pct}%</b> ของรายจ่ายรวม`);
+            if (highestCatName === 'ลงทุน') {
+                insights.push(`💡 ${label}เราเก็บออมและลงทุนกับหมวด <b>${emoji}</b> เยอะที่สุดนะ คิดเป็น <b>${pct}%</b> ของรายจ่ายรวม`);
+            } else {
+                insights.push(`💡 ${label}เราใช้จ่ายกับหมวด <b>${emoji}</b> เยอะที่สุดนะ คิดเป็น <b>${pct}%</b> ของรายจ่ายรวม`);
+            }
         }
     } else {
         insights.push(`💡 บันทึกรายจ่ายเพิ่มเติมใน${label}เพื่อให้พี่หมีวิเคราะห์สถิตินะครับ`);

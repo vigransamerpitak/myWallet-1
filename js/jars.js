@@ -113,7 +113,7 @@ function calculateEmergencyProgress() {
                         <span class="fs-5">🚨</span>
                         <input type="text" id="emergencyTargetTitleInput"
                             onchange="updateEmergencyTargetTitle(this.value)"
-                            class="form-control form-control-sm fw-bold text-dark border-0 bg-transparent p-0"
+                            class="form-control form-control-sm fw-bold border-0 bg-transparent p-0"
                             style="font-size: 0.85rem; width: auto; max-width: 140px; box-shadow: none !important; color: var(--text-dark) !important;"
                             value="${mainTargetTitle}" placeholder="พิมพ์ชื่อเป้าหมาย...">
                         <i class="bi bi-pencil-fill text-muted cursor-pointer" style="font-size: 0.65rem;"
@@ -124,7 +124,7 @@ function calculateEmergencyProgress() {
                         <span class="small text-muted" style="font-size: 0.7rem;">เป้าหมาย:</span>
                         <input type="number" id="emergencyTargetInput"
                             onchange="updateEmergencyTarget(this.value)"
-                            class="form-control form-control-xs py-0.5 px-2 fw-bold text-dark border-secondary"
+                            class="form-control form-control-xs py-0.5 px-2 fw-bold border-secondary"
                             style="width: 75px; font-size: 0.7rem; border-radius: 8px !important; display: inline-block; color: var(--text-dark) !important;"
                             value="${mainTargetVal}">
                         <span class="small text-muted" style="font-size: 0.7rem;">บ.</span>
@@ -191,7 +191,7 @@ function calculateEmergencyProgress() {
                         <span class="fs-5">${getGoalIcon(item.type)}</span>
                         <input type="text" id="subJarTitleInput-${item.id}"
                             onchange="triggerUpdateSubJar(${item.id}, '${item.type}')"
-                            class="form-control form-control-sm fw-bold text-dark border-0 bg-transparent p-0"
+                            class="form-control form-control-sm fw-bold border-0 bg-transparent p-0"
                             style="font-size: 0.85rem; width: auto; max-width: 140px; box-shadow: none !important; color: var(--text-dark) !important;"
                             value="${item.title}" placeholder="พิมพ์ชื่อเป้าหมาย...">
                         <i class="bi bi-pencil-fill text-muted cursor-pointer" style="font-size: 0.65rem;"
@@ -202,7 +202,7 @@ function calculateEmergencyProgress() {
                         <span class="small text-muted" style="font-size: 0.7rem;">เป้าหมาย:</span>
                         <input type="number" id="subJarAmountInput-${item.id}"
                             onchange="triggerUpdateSubJar(${item.id}, '${item.type}')"
-                            class="form-control form-control-xs py-0.5 px-2 fw-bold text-dark border-secondary"
+                            class="form-control form-control-xs py-0.5 px-2 fw-bold border-secondary"
                             style="width: 75px; font-size: 0.7rem; border-radius: 8px !important; display: inline-block; color: var(--text-dark) !important;"
                             value="${item.target}">
                         <span class="small text-muted" style="font-size: 0.7rem;">บ.</span>
