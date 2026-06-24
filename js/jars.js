@@ -101,62 +101,75 @@ function calculateEmergencyProgress() {
     const generalPct = mainTargetVal > 0 ? Math.min(100, Math.max(0, (generalBalance / mainTargetVal) * 100)).toFixed(1) : '0.0';
     const generalRemaining = Math.max(0, mainTargetVal - generalBalance);
 
+    const hideMainEmergencyJar = localStorage.getItem('hideMainEmergencyJar') === 'true';
+    let jarsHtml = '';
+
     // สร้างโครง HTML โหลเงินฝากทั่วไป (โหลหลัก)
-    let jarsHtml = `
-        <div class="savings-jar-item p-3 mb-3 bg-light rounded-4 border" style="background-color: var(--light-bg) !important; border-color: var(--card-border) !important; color: var(--color-text);">
-            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap" style="gap: 8px;">
-                <div class="d-flex align-items-center gap-1">
-                    <span class="fs-5">🚨</span>
-                    <input type="text" id="emergencyTargetTitleInput"
-                        onchange="updateEmergencyTargetTitle(this.value)"
-                        class="form-control form-control-sm fw-bold text-dark border-0 bg-transparent p-0"
-                        style="font-size: 0.85rem; width: auto; max-width: 140px; box-shadow: none !important; color: var(--text-dark) !important;"
-                        value="${mainTargetTitle}" placeholder="พิมพ์ชื่อเป้าหมาย...">
-                    <i class="bi bi-pencil-fill text-muted cursor-pointer" style="font-size: 0.65rem;"
-                        onclick="document.getElementById('emergencyTargetTitleInput').focus()"
-                        title="คลิกเพื่อแก้ไขชื่อเป้าหมาย"></i>
+    if (!hideMainEmergencyJar) {
+        jarsHtml = `
+            <div class="savings-jar-item p-3 mb-3 bg-light rounded-4 border" style="background-color: var(--light-bg) !important; border-color: var(--card-border) !important; color: var(--color-text);">
+                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap" style="gap: 8px;">
+                    <div class="d-flex align-items-center gap-1">
+                        <span class="fs-5">🚨</span>
+                        <input type="text" id="emergencyTargetTitleInput"
+                            onchange="updateEmergencyTargetTitle(this.value)"
+                            class="form-control form-control-sm fw-bold text-dark border-0 bg-transparent p-0"
+                            style="font-size: 0.85rem; width: auto; max-width: 140px; box-shadow: none !important; color: var(--text-dark) !important;"
+                            value="${mainTargetTitle}" placeholder="พิมพ์ชื่อเป้าหมาย...">
+                        <i class="bi bi-pencil-fill text-muted cursor-pointer" style="font-size: 0.65rem;"
+                            onclick="document.getElementById('emergencyTargetTitleInput').focus()"
+                            title="คลิกเพื่อแก้ไขชื่อเป้าหมาย"></i>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <span class="small text-muted" style="font-size: 0.7rem;">เป้าหมาย:</span>
+                        <input type="number" id="emergencyTargetInput"
+                            onchange="updateEmergencyTarget(this.value)"
+                            class="form-control form-control-xs py-0.5 px-2 fw-bold text-dark border-secondary"
+                            style="width: 75px; font-size: 0.7rem; border-radius: 8px !important; display: inline-block; color: var(--text-dark) !important;"
+                            value="${mainTargetVal}">
+                        <span class="small text-muted" style="font-size: 0.7rem;">บ.</span>
+                        <button onclick="confirmHideMainEmergencyJar()" class="btn btn-link text-muted p-0 px-1 ms-1 text-xs cursor-pointer" style="text-decoration:none;" title="ซ่อนโหลเงินออมฉุกเฉินหลัก">🗑️</button>
+                    </div>
                 </div>
-                <div class="d-flex align-items-center gap-1">
-                    <span class="small text-muted" style="font-size: 0.7rem;">เป้าหมาย:</span>
-                    <input type="number" id="emergencyTargetInput"
-                        onchange="updateEmergencyTarget(this.value)"
-                        class="form-control form-control-xs py-0.5 px-2 fw-bold text-dark border-secondary"
-                        style="width: 75px; font-size: 0.7rem; border-radius: 8px !important; display: inline-block; color: var(--text-dark) !important;"
-                        value="${mainTargetVal}">
-                    <span class="small text-muted" style="font-size: 0.7rem;">บ.</span>
-                </div>
-            </div>
-            <div class="row align-items-center g-2">
-                <div class="col-3 text-center">
-                    <div class="dream-jar-container" style="transform: scale(0.8); margin: 0 auto; width: 60px; height: 85px;">
-                        <div class="dream-jar-lid" style="width: 42px; height: 8px;"></div>
-                        <div class="dream-jar-neck" style="width: 45px; height: 6px; top: 7px;"></div>
-                        <div class="dream-jar" style="border-radius: 10px 10px 24px 24px;">
-                            <div id="dreamJarLiquid" class="dream-jar-liquid" style="height: ${generalPct}%;"></div>
-                            <div class="sparkle-particle" style="left:15px; animation-delay: 0.2s; width:4px; height:4px;"></div>
-                            <div class="sparkle-particle" style="left:30px; animation-delay: 0.8s; width:5px; height:5px;"></div>
-                            <div class="sparkle-particle" style="left:45px; animation-delay: 1.4s; width:4px; height:4px;"></div>
+                <div class="row align-items-center g-2">
+                    <div class="col-3 text-center">
+                        <div class="dream-jar-container" style="transform: scale(0.8); margin: 0 auto; width: 60px; height: 85px;">
+                            <div class="dream-jar-lid" style="width: 42px; height: 8px;"></div>
+                            <div class="dream-jar-neck" style="width: 45px; height: 6px; top: 7px;"></div>
+                            <div class="dream-jar" style="border-radius: 10px 10px 24px 24px;">
+                                <div id="dreamJarLiquid" class="dream-jar-liquid" style="height: ${generalPct}%;"></div>
+                                <div class="sparkle-particle" style="left:15px; animation-delay: 0.2s; width:4px; height:4px;"></div>
+                                <div class="sparkle-particle" style="left:30px; animation-delay: 0.8s; width:5px; height:5px;"></div>
+                                <div class="sparkle-particle" style="left:45px; animation-delay: 1.4s; width:4px; height:4px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-9">
+                        <div class="progress" style="height: 12px; border-radius: 6px;">
+                            <div id="emergencyProgressBar"
+                                class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                                role="progressbar"
+                                style="width: ${generalPct}%; border-radius: 6px; font-size: 0.65rem; font-weight: bold; line-height: 12px;">
+                                ${generalPct}%</div>
+                        </div>
+                        <div class="mt-2 text-xs">
+                            <div class="d-flex justify-content-between text-muted" style="font-size: 0.75rem;">
+                                <span>สะสมแล้ว: <b class="text-success" id="emergencyProgressCurrentText">${generalBalance.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บ.</b></span>
+                                <span id="emergencyProgressRemainingText">${generalRemaining <= 0 ? '🎉 สำเร็จ!' : `ยังขาดอีก: ${generalRemaining.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บ.`}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-9">
-                    <div class="progress" style="height: 12px; border-radius: 6px;">
-                        <div id="emergencyProgressBar"
-                            class="progress-bar progress-bar-striped progress-bar-animated bg-success"
-                            role="progressbar"
-                            style="width: ${generalPct}%; border-radius: 6px; font-size: 0.65rem; font-weight: bold; line-height: 12px;">
-                            ${generalPct}%</div>
-                    </div>
-                    <div class="mt-2 text-xs">
-                        <div class="d-flex justify-content-between text-muted" style="font-size: 0.75rem;">
-                            <span>สะสมแล้ว: <b class="text-success" id="emergencyProgressCurrentText">${generalBalance.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บ.</b></span>
-                            <span id="emergencyProgressRemainingText">${generalRemaining <= 0 ? '🎉 สำเร็จ!' : `ยังขาดอีก: ${generalRemaining.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บ.`}</span>
-                        </div>
-                    </div>
-                </div>
             </div>
-        </div>
-    `;
+        `;
+    } else {
+        jarsHtml = `
+            <div class="text-center py-2 mb-3" style="border: 1px dashed var(--card-border); border-radius: 14px; background-color: var(--light-bg) !important;">
+                <button onclick="restoreMainEmergencyJar()" class="btn btn-link btn-xs text-secondary text-decoration-none" style="font-size: 0.7rem;"><i class="bi bi-eye-fill"></i> แสดงโหลเงินออมฉุกเฉินหลัก</button>
+            </div>
+        `;
+    }
+
 
     // 6. วาดโหลเป้าหมายเงินออมย่อยอื่นๆ
     jarItems.forEach(item => {
@@ -315,3 +328,25 @@ async function triggerUpdateSubJar(id, type) {
         console.error("Error updating sub jar:", err);
     }
 }
+
+/**
+ * 🚨 ฟังก์ชันซ่อนโหลเงินออมฉุกเฉินหลัก
+ */
+async function confirmHideMainEmergencyJar() {
+    const confirm = await showCustomConfirm('คุณต้องการซ่อนโหลเงินออมฉุกเฉินหลักนี้ใช่หรือไม่? (คุณสามารถกดเปิดแสดงใหม่ได้ทุกเมื่อครับ)', 'ยืนยันการซ่อนโหลแก้ว', '🗑️');
+    if (confirm) {
+        localStorage.setItem('hideMainEmergencyJar', 'true');
+        calculateEmergencyProgress();
+        showToast('ซ่อนโหลเงินออมฉุกเฉินหลักเรียบร้อยแล้วครับ!', '🗑️');
+    }
+}
+
+/**
+ * 🚨 ฟังก์ชันกู้คืนโหลเงินออมฉุกเฉินหลัก
+ */
+function restoreMainEmergencyJar() {
+    localStorage.removeItem('hideMainEmergencyJar');
+    calculateEmergencyProgress();
+    showToast('แสดงโหลเงินออมฉุกเฉินหลักอีกครั้งแล้วจ้า! 🎯', '🎯');
+}
+

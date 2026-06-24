@@ -119,6 +119,24 @@ body {
     color: var(--text-dark) !important;
 }
 
+.form-control[type="file"]::file-selector-button {
+    background-color: var(--light-bg) !important;
+    color: var(--text-dark) !important;
+    border: none;
+    border-inline-end: 1px solid var(--card-border) !important;
+    border-radius: 0;
+    margin: -0.75rem -1rem;
+    margin-inline-end: 1rem;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.form-control[type="file"]::file-selector-button:hover {
+    background-color: var(--bg-body) !important;
+    cursor: pointer;
+}
+
+
 .category-btn {
     border-radius: 16px !important;
     padding: 0.6rem 1.2rem;
@@ -207,9 +225,18 @@ body {
 }
 
 .table {
+    --bs-table-bg: var(--card-bg) !important;
+    --bs-table-color: var(--color-text) !important;
     color: var(--color-text) !important;
     border-color: var(--card-border) !important;
 }
+
+.table-hover tbody tr:hover {
+    --bs-table-hover-bg: var(--light-bg) !important;
+    background-color: var(--light-bg) !important;
+    color: var(--text-dark) !important;
+}
+
 
 .text-dark {
     color: var(--text-dark) !important;

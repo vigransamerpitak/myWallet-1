@@ -305,19 +305,32 @@ function closeHugNotification() {
 // เช็คระบบว่ามีข้อความอ้อมกอดส่งหาแฟนตกค้างหรือใหม่หรือไม่
 function handleReceivedHug(tx) {
     const lastShownId = localStorage.getItem('lastShownHugId');
+    
+    // อัปเดต ID ล่าสุดที่เห็นเพื่อไม่ให้ประมวลผลซ้ำ
     if (lastShownId === null) {
         localStorage.setItem('lastShownHugId', tx.id);
+    } else if (tx.id > parseInt(lastShownId)) {
+        localStorage.setItem('lastShownHugId', tx.id);
+    }
+    
+    // ตรวจสอบว่าผู้รับคือผู้ใช้ปัจจุบันหรือไม่ (เพื่อไม่ให้ผู้ส่งเห็นป๊อปอัปของตัวเอง)
+    const nameMe = localStorage.getItem('nameMe') || 'คุณโบ๊ท';
+    const namePartner = localStorage.getItem('namePartner') || 'คุณเอิร์น';
+    const currentUserName = window.currentUserRole === 'me' ? nameMe : namePartner;
+    const cleanUserName = currentUserName.replace(/^คุณ/, '');
+    
+    if (!tx.note || (!tx.note.includes("มาให้" + cleanUserName) && !tx.note.includes("มาให้คุณ" + cleanUserName))) {
         return;
     }
     
-    if (tx.id > parseInt(lastShownId)) {
+    // แสดงป๊อปอัปหากเป็นธุรกรรมที่ใหม่กว่าตัวที่เคยแสดงล่าสุด
+    if (lastShownId !== null && tx.id > parseInt(lastShownId)) {
         const overlay = document.getElementById('hugNotificationOverlay');
         const msgEl = document.getElementById('hugNotificationMessage');
         if (overlay && msgEl) {
             msgEl.innerText = tx.note.replace('[SYSTEM_HUG] ', '').replace('[SYSTEM_HUG]', '').trim();
             overlay.classList.remove('d-none');
             triggerCelebration();
-            localStorage.setItem('lastShownHugId', tx.id);
         }
     }
 }
