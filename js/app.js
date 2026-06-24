@@ -1247,7 +1247,13 @@ async function settleGoal(id, status, title, amount, type) {
 async function resetGoalStatus(id, title) {
     let realTitle = title;
     const { data: goalData, error: fetchError } = await supabaseClient.from('goals').select('title').eq('id', id).single();
-    if (!fetchError && goalData) { realTitle = goalData.title; }
+    if (!fetchError && goalData && goalData.title) {
+        realTitle = goalData.title;
+        const typeMatch = realTitle.match(/^\[(save[a-zA-Z0-9_]*)\]\s*/);
+        if (typeMatch) {
+            realTitle = realTitle.replace(typeMatch[0], '');
+        }
+    }
 
     if (!(await showCustomConfirm(`คุณต้องการยกเลิกสถานะของภารกิจ "${realTitle}" เพื่อกลับไปเลือกกดใหม่ ใช่หรือไม่?\n(ระบบจะลบรายการเงินที่เคยบันทึกให้อัตโนมัติ)`, 'รีเซ็ตสถานะภารกิจ', '↩️'))) return;
     
@@ -1259,7 +1265,14 @@ async function resetGoalStatus(id, title) {
     const notePatternMe = `[จ่ายโดย: me] จ่ายบิลออโต้: ${realTitle}`;
     const notePatternPartner = `[จ่ายโดย: partner] จ่ายบิลออโต้: ${realTitle}`;
     
-    await supabaseClient.from('transactions').delete().in('note', [notePattern1, notePatternDeduct, notePatternMe, notePatternPartner]);
+    console.log("Attempting to delete transactions with notes:", [notePattern1, notePatternDeduct, notePatternMe, notePatternPartner]);
+    const { error: deleteError } = await supabaseClient.from('transactions').delete().in('note', [notePattern1, notePatternDeduct, notePatternMe, notePatternPartner]);
+    if (deleteError) {
+        console.error("Delete transactions error:", deleteError);
+        showToast(`ลบธุรกรรมล้มเหลว: ${deleteError.message}`, '❌', true);
+    } else {
+        console.log("Delete transactions query completed successfully");
+    }
 
     showToast('รีเซ็ตสถานะภารกิจและคืนยอดกระเป๋าเงินเรียบร้อย', '↩️');
     await loadGoals();
