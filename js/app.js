@@ -1073,6 +1073,7 @@ async function createNewGoalFrontend() {
         showToast(`เพิ่มภารกิจล้มเหลว: ${error.message}`, '❌', true);
     } else {
         titleInput.value = ''; amountInput.value = '';
+        localStorage.setItem(`defaultGoalsCreated_${targetMonthStr}`, 'true');
         showToast('เพิ่มภารกิจลงหน้าจอสำเร็จแล้ว!', '➕');
         triggerCelebration();
         await loadGoals();
@@ -1104,13 +1105,21 @@ async function loadGoals() {
     
     // ตั้งค่าบิลเริ่มต้นหากรอบเดือนใหม่ยังว่าง
     if (goals.length === 0 && filterDate !== 'all') {
-        const defaultGoals = [
-            { title: '[save_travel] ออมเงินกองกลางไปเที่ยวญี่ปุ่น', amount: 2000, type: 'save', goal_month: targetMonthStr },
-            { title: 'จ่ายค่าส่วนกลางคอนโด', amount: 1500, type: 'bill', goal_month: targetMonthStr },
-            { title: 'หยอดกระปุกสำรองฉุกเฉินเพิ่ม', amount: 1000, type: 'save', goal_month: targetMonthStr }
-        ];
-        const { data: insertedData, error: insertError } = await supabaseClient.from('goals').insert(defaultGoals).select();
-        if (!insertError) { goals = insertedData; showToast(`สร้าง Checklist เดือน ${targetMonthStr} ออโต้จ้า!`, '🎉'); }
+        const flagKey = `defaultGoalsCreated_${targetMonthStr}`;
+        const alreadyCreated = localStorage.getItem(flagKey) === 'true';
+        if (!alreadyCreated) {
+            const defaultGoals = [
+                { title: '[save_travel] ออมเงินกองกลางไปเที่ยวญี่ปุ่น', amount: 2000, type: 'save', goal_month: targetMonthStr },
+                { title: 'จ่ายค่าส่วนกลางคอนโด', amount: 1500, type: 'bill', goal_month: targetMonthStr },
+                { title: 'หยอดกระปุกสำรองฉุกเฉินเพิ่ม', amount: 1000, type: 'save', goal_month: targetMonthStr }
+            ];
+            const { data: insertedData, error: insertError } = await supabaseClient.from('goals').insert(defaultGoals).select();
+            if (!insertError) { 
+                goals = insertedData; 
+                localStorage.setItem(flagKey, 'true');
+                showToast(`สร้าง Checklist เดือน ${targetMonthStr} ออโต้จ้า!`, '🎉'); 
+            }
+        }
     }
     
     if (goalsList) goalsList.innerHTML = '';
@@ -1259,9 +1268,15 @@ async function resetGoalStatus(id, title) {
 
 async function deleteGoalFrontend(id) {
     if (!(await showCustomConfirm('ต้องการลบภารกิจนี้ออกจากหน้าจอใช่ไหมครับ?', 'ลบภารกิจ', '🗑️'))) return;
+    const now = new Date();
+    const targetMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     const { error } = await supabaseClient.from('goals').delete().eq('id', id);
     if (error) showToast(error.message, '❌', true);
-    else { showToast('ลบภารกิจออกแล้ว', '🗑️'); await loadGoals(); }
+    else { 
+        localStorage.setItem(`defaultGoalsCreated_${targetMonthStr}`, 'true');
+        showToast('ลบภารกิจออกแล้ว', '🗑️'); 
+        await loadGoals(); 
+    }
 }
 
 // === 📅 Subscriptions & Monthly Bills (บิลบริการและรายจ่ายประจำเดือน) ===
