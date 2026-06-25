@@ -221,11 +221,16 @@ function calculateEmergencyProgress() {
                                 style="width: ${item.pct}%; border-radius: 6px; font-size: 0.65rem; font-weight: bold; line-height: 12px;">
                                 ${item.pct}%</div>
                         </div>
-                        <div class="mt-2 text-xs">
-                            <div class="d-flex justify-content-between text-muted" style="font-size: 0.75rem;">
+                        <div class="mt-2 text-xs d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div class="text-muted" style="font-size: 0.75rem;">
                                 <span>สะสมแล้ว: <b class="text-success">${item.accumulated.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บ.</b></span>
-                                <span>${item.remaining <= 0 ? '🎉 สำเร็จ!' : `ยังขาดอีก: ${item.remaining.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บ.`}</span>
+                                <span class="d-block text-secondary mt-0.5" style="font-size: 0.68rem;">${item.remaining <= 0 ? '🎉 สำเร็จ!' : `ยังขาดอีก: ${item.remaining.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บ.`}</span>
                             </div>
+                            ${item.remaining > 0 ? `
+                                <button onclick="depositToJarPrompt(${item.id}, '${safeTitle}')" class="btn btn-xs btn-outline-success rounded-pill fw-bold" style="font-size: 0.68rem; padding: 2px 10px;">
+                                    💰 ฝากออมเพิ่ม
+                                </button>
+                            ` : ''}
                         </div>
                     </div>
                 </div>
@@ -396,5 +401,59 @@ function restoreMainEmergencyJar() {
     localStorage.removeItem('hideMainEmergencyJar');
     calculateEmergencyProgress();
     showToast('แสดงโหลเงินออมฉุกเฉินหลักอีกครั้งแล้วจ้า! 🎯', '🎯');
+}
+
+/**
+ * 💰 ฟังก์ชันฝากเงินสะสมเข้ากระปุกออมเงินย่อยโดยตรง
+ */
+async function depositToJarPrompt(goalId, title) {
+    const amountStr = prompt(`กรุณากรอกจำนวนเงินที่ต้องการฝากสะสมเข้ากระปุก "${title}" (บาท):`);
+    if (amountStr === null) return; // กดยกเลิก
+    
+    const amount = parseFloat(amountStr);
+    if (isNaN(amount) || amount <= 0) {
+        showToast('กรุณากรอกจำนวนเงินให้ถูกต้องครับ', '⚠️', true);
+        return;
+    }
+    
+    const finalAmount = parseFloat(amount.toFixed(2));
+    const userRole = window.currentUserRole || 'me';
+    
+    // 1. บันทึกกระเป๋าส่วนตัว (รายจ่าย: ลงทุน)
+    const expenseTx = {
+        amount: finalAmount,
+        type: 'expense',
+        category_name: 'ลงทุน',
+        owner: userRole,
+        note: `[หักเงินออมภารกิจ] ${title}`,
+        created_at: new Date().toISOString()
+    };
+    
+    // 2. ฝากเข้ากระเป๋าออมฉุกเฉิน (รายรับ: ลงทุน)
+    const incomeTx = {
+        amount: finalAmount,
+        type: 'income',
+        category_name: 'ลงทุน',
+        owner: 'emergency',
+        note: `[ออมเพื่อ: ${title}]`,
+        created_at: new Date().toISOString()
+    };
+    
+    try {
+        const { error: err1 } = await supabaseClient.from('transactions').insert([expenseTx]);
+        if (err1) throw err1;
+        
+        const { error: err2 } = await supabaseClient.from('transactions').insert([incomeTx]);
+        if (err2) throw err2;
+        
+        showToast(`ฝากเงินสะสมเข้ากระปุก "${title}" สำเร็จแล้ว +${finalAmount.toLocaleString('th-TH')} บ.! 💖`, '🎉');
+        triggerCelebration();
+        
+        if (typeof loadGoals === 'function') await loadGoals();
+        if (typeof loadTransactions === 'function') await loadTransactions();
+    } catch (err) {
+        console.error("Error depositing to jar:", err);
+        showToast(`บันทึกการฝากเงินล้มเหลว: ${err.message}`, '❌', true);
+    }
 }
 
