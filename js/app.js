@@ -1125,6 +1125,8 @@ async function loadGoals() {
     if (goalsList) goalsList.innerHTML = '';
     if (!goals || goals.length === 0) {
         if (goalsList) goalsList.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">ไม่มีภารกิจการเงินระบุไว้</p>';
+        loadedGoalsCache = [];
+        updateInsightsAndProgress();
         return;
     }
     
