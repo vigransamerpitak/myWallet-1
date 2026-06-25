@@ -1196,45 +1196,89 @@ async function settleGoal(id, status, title, amount, type) {
     }
 
     if (status === 'success') {
-        if (!(await showCustomConfirm(`ยืนยันทำเควสสำเร็จ: "${realTitle}"?\nระบบจะสร้างธุรกรรมออม/จ่ายเงินให้อัตโนมัติ`, 'ทำภารกิจสำเร็จ', '🏆'))) return;
+        let currentAccumulated = 0;
+        if (loadedTxsCache) {
+            loadedTxsCache.forEach(tx => {
+                if (tx.owner === 'emergency') {
+                    const amt = parseFloat(tx.amount);
+                    const isMatch = tx.note && (tx.note.includes(`ภารกิจสำเร็จ: ${realTitle}`) || tx.note.includes(`[ออมเพื่อ: ${realTitle}]`));
+                    if (isMatch) {
+                        currentAccumulated += (tx.type === 'income' ? amt : -amt);
+                    }
+                }
+            });
+        }
+
+        const remainingAmount = Math.max(0, realAmount - currentAccumulated);
+        let finalAmount = 0;
+        let createTx = false;
+
+        if (realType.startsWith('save')) {
+            if (remainingAmount <= 0) {
+                if (!(await showCustomConfirm(`ยืนยันทำเควสสำเร็จ: "${realTitle}"?\n(คุณได้เก็บเงินออมสะสมครบเป้าหมายแล้ว ระบบจะไม่สร้างธุรกรรมใหม่ซ้ำซ้อน)`, 'ทำภารกิจสำเร็จ', '🏆'))) return;
+                createTx = false;
+            } else {
+                const confirmText = `ยืนยันทำเควสสำเร็จ: "${realTitle}"?\n(สะสมแล้ว ${currentAccumulated.toLocaleString('th-TH')} บ. ยังขาดอีก ${remainingAmount.toLocaleString('th-TH')} บ.)\n\nต้องการเปลี่ยนสถานะภารกิจนี้เป็นสำเร็จหรือไม่?`;
+                const choice = await showCustomConfirm(confirmText, 'ทำภารกิจสำเร็จ', '🏆');
+                if (!choice) return;
+
+                const confirmTransfer = await showCustomConfirm(
+                    `ต้องการให้ระบบบันทึกรายการโอนเงินจำนวน ${remainingAmount.toLocaleString('th-TH')} บ. เพื่อสมทบให้เต็มจำนวนด้วยหรือไม่?\n(เลือก 'ยกเลิก' เพื่อเปลี่ยนสถานะเป็นสำเร็จเฉยๆ โดยไม่มีรายการโอนเงินเพิ่มเติม)`,
+                    'บันทึกรายการโอนเงิน',
+                    '💰'
+                );
+                if (confirmTransfer) {
+                    finalAmount = parseFloat(remainingAmount.toFixed(2));
+                    createTx = true;
+                } else {
+                    createTx = false;
+                }
+            }
+        } else {
+            if (!(await showCustomConfirm(`ยืนยันจ่ายบิลสำเร็จ: "${realTitle}"?\nระบบจะสร้างธุรกรรมจ่ายเงินให้อัตโนมัติ`, 'จ่ายบิลสำเร็จ', '🏆'))) return;
+            finalAmount = parseFloat(parseFloat(realAmount).toFixed(2));
+            createTx = true;
+        }
+
         const { error } = await supabaseClient.from('goals').update({ is_completed: true, is_failed: false }).eq('id', id);
         if (error) return showToast(error.message, '❌', true);
         
-        const finalAmount = parseFloat(parseFloat(realAmount).toFixed(2));
-        if (realType.startsWith('save')) { 
-            let emoji = getGoalIcon(realType);
-            
-            // 1. ตัดเงินจากกระเป๋าเรา
-            await supabaseClient.from('transactions').insert([{
-                amount: finalAmount,
-                type: 'expense',
-                category_name: 'ลงทุน',
-                owner: currentUserRole,
-                note: `[หักเงินออมภารกิจ] ${realTitle}`,
-                created_at: new Date().toISOString()
-            }]);
+        if (createTx && finalAmount > 0) {
+            if (realType.startsWith('save')) { 
+                let emoji = getGoalIcon(realType);
+                
+                await supabaseClient.from('transactions').insert([{
+                    amount: finalAmount,
+                    type: 'expense',
+                    category_name: 'ลงทุน',
+                    owner: currentUserRole,
+                    note: `[หักเงินออมภารกิจ] ${realTitle}`,
+                    created_at: new Date().toISOString()
+                }]);
 
-            // 2. ย้ายเข้าบัญชีออมฉุกเฉิน
-            await supabaseClient.from('transactions').insert([{
-                amount: finalAmount,
-                type: 'income',
-                category_name: 'ลงทุน',
-                owner: 'emergency',
-                note: `ภารกิจสำเร็จ: ${realTitle}`,
-                created_at: new Date().toISOString()
-            }]); 
-            showToast(`ย้ายเงินเข้าบัญชีออมสำเร็จ ${emoji}`, '🎉'); 
+                await supabaseClient.from('transactions').insert([{
+                    amount: finalAmount,
+                    type: 'income',
+                    category_name: 'ลงทุน',
+                    owner: 'emergency',
+                    note: `ภารกิจสำเร็จ: ${realTitle}`,
+                    created_at: new Date().toISOString()
+                }]); 
+                showToast(`ย้ายเงินส่วนที่เหลือเข้าบัญชีออมสำเร็จ ${emoji}`, '🎉'); 
+            } else {
+                let noteWithTag = `[จ่ายโดย: ${currentUserRole === 'me' ? 'me' : 'partner'}] จ่ายบิลออโต้: ${realTitle}`;
+                await supabaseClient.from('transactions').insert([{
+                    amount: finalAmount,
+                    type: 'expense',
+                    category_name: 'ค่าที่พัก/บ้าน',
+                    owner: 'shared',
+                    note: noteWithTag,
+                    created_at: new Date().toISOString()
+                }]);
+                showToast('ตัดยอดบิลส่วนกลางเรียบร้อย 📄', '✅');
+            }
         } else {
-            let noteWithTag = `[จ่ายโดย: ${currentUserRole === 'me' ? 'me' : 'partner'}] จ่ายบิลออโต้: ${realTitle}`;
-            await supabaseClient.from('transactions').insert([{
-                amount: finalAmount,
-                type: 'expense',
-                category_name: 'ค่าที่พัก/บ้าน',
-                owner: 'shared',
-                note: noteWithTag,
-                created_at: new Date().toISOString()
-            }]);
-            showToast('ตัดยอดบิลส่วนกลางเรียบร้อย 📄', '✅');
+            showToast('บันทึกสถานะภารกิจสำเร็จแล้ว! 🏆', '🎉');
         }
         triggerCelebration();
     } else {

@@ -162,14 +162,7 @@ function calculateEmergencyProgress() {
                 </div>
             </div>
         `;
-    } else {
-        jarsHtml = `
-            <div class="text-center py-2 mb-3" style="border: 1px dashed var(--card-border); border-radius: 14px; background-color: var(--light-bg) !important;">
-                <button onclick="restoreMainEmergencyJar()" class="btn btn-link btn-xs text-secondary text-decoration-none" style="font-size: 0.7rem;"><i class="bi bi-eye-fill"></i> แสดงโหลเงินออมฉุกเฉินหลัก</button>
-            </div>
-        `;
     }
-
 
     // 6. วาดโหลเป้าหมายเงินออมย่อยอื่นๆ
     jarItems.forEach(item => {
@@ -239,6 +232,14 @@ function calculateEmergencyProgress() {
             </div>
         `;
     });
+
+    if (hideMainEmergencyJar) {
+        jarsHtml += `
+            <div class="text-center py-1 mt-2" style="opacity: 0.5;">
+                <button onclick="restoreMainEmergencyJar()" class="btn btn-link btn-xs text-secondary text-decoration-none" style="font-size: 0.65rem;"><i class="bi bi-eye-fill"></i> แสดงโหลหลักสำรองฉุกเฉิน</button>
+            </div>
+        `;
+    }
 
     container.innerHTML = jarsHtml;
 }
@@ -333,11 +334,58 @@ async function triggerUpdateSubJar(id, type) {
  * 🚨 ฟังก์ชันซ่อนโหลเงินออมฉุกเฉินหลัก
  */
 async function confirmHideMainEmergencyJar() {
-    const confirm = await showCustomConfirm('คุณต้องการซ่อนโหลเงินออมฉุกเฉินหลักนี้ใช่หรือไม่? (คุณสามารถกดเปิดแสดงใหม่ได้ทุกเมื่อครับ)', 'ยืนยันการซ่อนโหลแก้ว', '🗑️');
+    const confirm = await showCustomConfirm(
+        'คุณต้องการลบ/ซ่อนโหลเงินออมฉุกเฉินหลักนี้ใช่หรือไม่?\n(ระบบจะซ่อนโหลนี้จากรายการ และคุณสามารถเพิ่มมันเป็นภารกิจการออมใน Checklist ด้านขวาได้ครับ)',
+        'ลบโหลเงินออมฉุกเฉินหลัก',
+        '🗑️'
+    );
     if (confirm) {
         localStorage.setItem('hideMainEmergencyJar', 'true');
+        
+        const addAsMission = await showCustomConfirm(
+            'ต้องการให้ระบบเพิ่ม "เงินออมสำรองฉุกเฉิน" เป็นภารกิจการออมใน Checklist ด้านขวาให้โดยอัตโนมัติเลยไหมครับ?',
+            'เพิ่มเป็นภารกิจการเงิน',
+            '🎯'
+        );
+        
+        if (addAsMission) {
+            const mainTargetVal = parseFloat(localStorage.getItem('emergencyTarget')) || 50000;
+            const mainTargetTitle = localStorage.getItem('emergencyTargetTitle') || 'เงินออมสำรองฉุกเฉิน';
+            
+            const currentFilterDate = window.filterDate || 'this-month';
+            const now = new Date();
+            let targetMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            if (currentFilterDate === 'last-month') {
+                let prevMonth = now.getMonth() - 1;
+                let prevYear = now.getFullYear();
+                if (prevMonth < 0) {
+                    prevMonth = 11;
+                    prevYear--;
+                }
+                targetMonthStr = `${prevYear}-${String(prevMonth + 1).padStart(2, '0')}`;
+            }
+            
+            const { error } = await supabaseClient.from('goals').insert([{
+                title: mainTargetTitle,
+                amount: mainTargetVal,
+                type: 'save',
+                goal_month: targetMonthStr,
+                is_completed: false,
+                is_failed: false
+            }]);
+            
+            if (error) {
+                showToast(`เพิ่มภารกิจล้มเหลว: ${error.message}`, '❌', true);
+            } else {
+                localStorage.setItem(`defaultGoalsCreated_${targetMonthStr}`, 'true');
+                showToast('ย้ายโหลหลักไปเป็นภารกิจใน Checklist สำเร็จแล้ว!', '🎉');
+                if (typeof loadGoals === 'function') await loadGoals();
+            }
+        } else {
+            showToast('ซ่อนโหลเงินออมฉุกเฉินหลักเรียบร้อยแล้วครับ!', '🗑️');
+        }
+        
         calculateEmergencyProgress();
-        showToast('ซ่อนโหลเงินออมฉุกเฉินหลักเรียบร้อยแล้วครับ!', '🗑️');
     }
 }
 
