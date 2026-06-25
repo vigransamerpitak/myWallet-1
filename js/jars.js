@@ -166,6 +166,7 @@ function calculateEmergencyProgress() {
 
     // 6. วาดโหลเป้าหมายเงินออมย่อยอื่นๆ
     jarItems.forEach(item => {
+        const safeTitle = escapeForAttr(item.title || '');
         let typeClass = item.type;
         let progressBarColorClass = 'bg-success';
         if (item.type === 'save_travel') progressBarColorClass = 'bg-info';
