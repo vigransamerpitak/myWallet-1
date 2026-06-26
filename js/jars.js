@@ -152,11 +152,16 @@ function calculateEmergencyProgress() {
                                 style="width: ${generalPct}%; border-radius: 6px; font-size: 0.65rem; font-weight: bold; line-height: 12px;">
                                 ${generalPct}%</div>
                         </div>
-                        <div class="mt-2 text-xs">
-                            <div class="d-flex justify-content-between text-muted" style="font-size: 0.75rem;">
+                        <div class="mt-2 text-xs d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div class="text-muted" style="font-size: 0.75rem;">
                                 <span>สะสมแล้ว: <b class="text-success" id="emergencyProgressCurrentText">${generalBalance.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บ.</b></span>
-                                <span id="emergencyProgressRemainingText">${generalRemaining <= 0 ? '🎉 สำเร็จ!' : `ยังขาดอีก: ${generalRemaining.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บ.`}</span>
+                                <span class="d-block text-secondary mt-0.5" id="emergencyProgressRemainingText" style="font-size: 0.68rem;">${generalRemaining <= 0 ? '🎉 สำเร็จ!' : `ยังขาดอีก: ${generalRemaining.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บ.`}</span>
                             </div>
+                            ${generalRemaining > 0 ? `
+                                <button onclick="depositToEmergencyPrompt()" class="btn btn-xs btn-outline-success rounded-pill fw-bold" style="font-size: 0.68rem; padding: 2px 10px;">
+                                    💰 ฝากออมเพิ่ม
+                                </button>
+                            ` : ''}
                         </div>
                     </div>
                 </div>
@@ -454,6 +459,61 @@ async function depositToJarPrompt(goalId, title) {
         if (typeof loadTransactions === 'function') await loadTransactions();
     } catch (err) {
         console.error("Error depositing to jar:", err);
+        showToast(`บันทึกการฝากเงินล้มเหลว: ${err.message}`, '❌', true);
+    }
+}
+
+/**
+ * 🚨 ฟังก์ชันฝากเงินสะสมเข้าคลังเงินออมฉุกเฉินหลักโดยตรง
+ */
+async function depositToEmergencyPrompt() {
+    const mainTargetTitle = localStorage.getItem('emergencyTargetTitle') || 'เงินออมสำรองฉุกเฉิน';
+    const amountStr = prompt(`กรุณากรอกจำนวนเงินที่ต้องการฝากเข้า "${mainTargetTitle}" (บาท):`);
+    if (amountStr === null) return; // กดยกเลิก
+    
+    const amount = parseFloat(amountStr);
+    if (isNaN(amount) || amount <= 0) {
+        showToast('กรุณากรอกจำนวนเงินให้ถูกต้องครับ', '⚠️', true);
+        return;
+    }
+    
+    const finalAmount = parseFloat(amount.toFixed(2));
+    const userRole = window.currentUserRole || 'me';
+    
+    // 1. บันทึกกระเป๋าส่วนตัว (รายจ่าย: ลงทุน)
+    const expenseTx = {
+        amount: finalAmount,
+        type: 'expense',
+        category_name: 'ลงทุน',
+        owner: userRole,
+        note: `[โอนเข้าออมฉุกเฉิน] ฝากออมฉุกเฉิน`,
+        created_at: new Date().toISOString()
+    };
+    
+    // 2. ฝากเข้ากระเป๋าออมฉุกเฉิน (รายรับ: ลงทุน)
+    const incomeTx = {
+        amount: finalAmount,
+        type: 'income',
+        category_name: 'ลงทุน',
+        owner: 'emergency',
+        note: `[โอนเข้าออมฉุกเฉิน] ฝากออมฉุกเฉิน`,
+        created_at: new Date().toISOString()
+    };
+    
+    try {
+        const { error: err1 } = await supabaseClient.from('transactions').insert([expenseTx]);
+        if (err1) throw err1;
+        
+        const { error: err2 } = await supabaseClient.from('transactions').insert([incomeTx]);
+        if (err2) throw err2;
+        
+        showToast(`ฝากเงินสะสมเข้า "${mainTargetTitle}" สำเร็จแล้ว +${finalAmount.toLocaleString('th-TH')} บ.! 💖`, '🎉');
+        triggerCelebration();
+        
+        if (typeof loadGoals === 'function') await loadGoals();
+        if (typeof loadTransactions === 'function') await loadTransactions();
+    } catch (err) {
+        console.error("Error depositing to emergency:", err);
         showToast(`บันทึกการฝากเงินล้มเหลว: ${err.message}`, '❌', true);
     }
 }
