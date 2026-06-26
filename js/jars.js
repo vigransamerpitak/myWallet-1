@@ -413,8 +413,8 @@ function restoreMainEmergencyJar() {
  * 💰 ฟังก์ชันฝากเงินสะสมเข้ากระปุกออมเงินย่อยโดยตรง
  */
 async function depositToJarPrompt(goalId, title) {
-    const amountStr = prompt(`กรุณากรอกจำนวนเงินที่ต้องการฝากสะสมเข้ากระปุก "${title}" (บาท):`);
-    if (amountStr === null) return; // กดยกเลิก
+    const amountStr = await showCustomPrompt(`กรุณากรอกจำนวนเงินที่ต้องการฝากสะสมเข้ากระปุก "${title}" (บาท):`, 'ฝากเงินสะสม', '', '0.00', '💰');
+    if (amountStr === null || amountStr === '') return; // กดยกเลิก หรือไม่ได้กรอก
     
     const amount = parseFloat(amountStr);
     if (isNaN(amount) || amount <= 0) {
@@ -468,8 +468,8 @@ async function depositToJarPrompt(goalId, title) {
  */
 async function depositToEmergencyPrompt() {
     const mainTargetTitle = localStorage.getItem('emergencyTargetTitle') || 'เงินออมสำรองฉุกเฉิน';
-    const amountStr = prompt(`กรุณากรอกจำนวนเงินที่ต้องการฝากเข้า "${mainTargetTitle}" (บาท):`);
-    if (amountStr === null) return; // กดยกเลิก
+    const amountStr = await showCustomPrompt(`กรุณากรอกจำนวนเงินที่ต้องการฝากเข้า "${mainTargetTitle}" (บาท):`, 'ฝากเงินสำรองฉุกเฉิน', '', '0.00', '🚨');
+    if (amountStr === null || amountStr === '') return; // กดยกเลิก หรือไม่ได้กรอก
     
     const amount = parseFloat(amountStr);
     if (isNaN(amount) || amount <= 0) {
