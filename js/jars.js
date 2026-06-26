@@ -157,11 +157,17 @@ function calculateEmergencyProgress() {
                                 <span>สะสมแล้ว: <b class="text-success" id="emergencyProgressCurrentText">${generalBalance.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บ.</b></span>
                                 <span class="d-block text-secondary mt-0.5" id="emergencyProgressRemainingText" style="font-size: 0.68rem;">${generalRemaining <= 0 ? '🎉 สำเร็จ!' : `ยังขาดอีก: ${generalRemaining.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บ.`}</span>
                             </div>
-                            ${generalRemaining > 0 ? `
-                                <button onclick="depositToEmergencyPrompt()" class="btn btn-xs btn-outline-success rounded-pill fw-bold" style="font-size: 0.68rem; padding: 2px 10px;">
-                                    💰 ฝากออมเพิ่ม
+                            <div class="d-flex gap-1 flex-wrap">
+                                <button onclick="depositToEmergencyPrompt()" class="btn btn-xs btn-outline-success rounded-pill fw-bold" style="font-size: 0.65rem; padding: 2px 8px;">
+                                    💰 ฝากเงิน
                                 </button>
-                            ` : ''}
+                                <button onclick="withdrawFromEmergencyPrompt()" class="btn btn-xs btn-outline-danger rounded-pill fw-bold" style="font-size: 0.65rem; padding: 2px 8px;">
+                                    💸 ถอนเงิน
+                                </button>
+                                <button onclick="showEmergencyHistory()" class="btn btn-xs btn-outline-secondary rounded-pill fw-bold" style="font-size: 0.65rem; padding: 2px 8px;" title="ดูประวัติการออม">
+                                    📜 ประวัติ
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -232,11 +238,17 @@ function calculateEmergencyProgress() {
                                 <span>สะสมแล้ว: <b class="text-success">${item.accumulated.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บ.</b></span>
                                 <span class="d-block text-secondary mt-0.5" style="font-size: 0.68rem;">${item.remaining <= 0 ? '🎉 สำเร็จ!' : `ยังขาดอีก: ${item.remaining.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บ.`}</span>
                             </div>
-                            ${item.remaining > 0 ? `
-                                <button onclick="depositToJarPrompt(${item.id}, '${safeTitle}')" class="btn btn-xs btn-outline-success rounded-pill fw-bold" style="font-size: 0.68rem; padding: 2px 10px;">
-                                    💰 ฝากออมเพิ่ม
+                            <div class="d-flex gap-1 flex-wrap">
+                                <button onclick="depositToJarPrompt(${item.id}, '${safeTitle}')" class="btn btn-xs btn-outline-success rounded-pill fw-bold" style="font-size: 0.65rem; padding: 2px 8px;">
+                                    💰 ฝากเงิน
                                 </button>
-                            ` : ''}
+                                <button onclick="withdrawFromJarPrompt(${item.id}, '${safeTitle}')" class="btn btn-xs btn-outline-danger rounded-pill fw-bold" style="font-size: 0.65rem; padding: 2px 8px;">
+                                    💸 ถอนเงิน
+                                </button>
+                                <button onclick="showJarHistory(${item.id}, '${safeTitle}')" class="btn btn-xs btn-outline-secondary rounded-pill fw-bold" style="font-size: 0.65rem; padding: 2px 8px;" title="ดูประวัติการออม">
+                                    📜 ประวัติ
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -516,5 +528,317 @@ async function depositToEmergencyPrompt() {
         console.error("Error depositing to emergency:", err);
         showToast(`บันทึกการฝากเงินล้มเหลว: ${err.message}`, '❌', true);
     }
+}
+
+/**
+ * 💸 ฟังก์ชันถอนเงินสะสมออกจากกระปุกออมเงินย่อยกลับเข้ากระเป๋าส่วนตัว
+ */
+async function withdrawFromJarPrompt(goalId, title) {
+    // 1. ค้นหายอดสะสมจากแคชธุรกรรม
+    let accumulated = 0;
+    if (loadedTxsCache) {
+        loadedTxsCache.forEach(tx => {
+            if (tx.owner === 'emergency') {
+                const amt = parseFloat(tx.amount);
+                const isMatch = tx.note && (tx.note.includes(`ภารกิจสำเร็จ: ${title}`) || tx.note.includes(`[ออมเพื่อ: ${title}]`));
+                if (isMatch) {
+                    accumulated += (tx.type === 'income' ? amt : -amt);
+                }
+            }
+        });
+    }
+
+    if (accumulated <= 0) {
+        showToast('กระปุกนี้ยังไม่มีเงินสะสมให้ถอนครับ', '⚠️', true);
+        return;
+    }
+
+    const amountStr = await showCustomPrompt(
+        `กรุณากรอกจำนวนเงินที่ต้องการถอนออกจากกระปุก "${title}" (บาท):<br><small class="text-muted">ยอดเงินที่มีสะสม: ${accumulated.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บ.</small>`,
+        'ถอนเงินออม',
+        '',
+        '0.00',
+        '💸'
+    );
+    if (amountStr === null || amountStr === '') return; // กดยกเลิก หรือไม่ได้กรอก
+    
+    const amount = parseFloat(amountStr);
+    if (isNaN(amount) || amount <= 0) {
+        showToast('กรุณากรอกจำนวนเงินให้ถูกต้องครับ', '⚠️', true);
+        return;
+    }
+
+    if (amount > accumulated) {
+        showToast(`ยอดเงินถอนต้องไม่เกินยอดเงินสะสมที่มีอยู่ (${accumulated.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บ.)`, '⚠️', true);
+        return;
+    }
+    
+    const finalAmount = parseFloat(amount.toFixed(2));
+    const userRole = window.currentUserRole || 'me';
+    
+    // 1. บันทึกเข้ากระเป๋าส่วนตัว (รายรับ: ลงทุน)
+    const incomeTx = {
+        amount: finalAmount,
+        type: 'income',
+        category_name: 'ลงทุน',
+        owner: userRole,
+        note: `[ถอนเงินออมภารกิจ] ${title}`,
+        created_at: new Date().toISOString()
+    };
+    
+    // 2. หักออกกระเป๋าออมฉุกเฉิน (รายจ่าย: ลงทุน)
+    const expenseTx = {
+        amount: finalAmount,
+        type: 'expense',
+        category_name: 'ลงทุน',
+        owner: 'emergency',
+        note: `[ออมเพื่อ: ${title}]`,
+        created_at: new Date().toISOString()
+    };
+    
+    try {
+        const { error: err1 } = await supabaseClient.from('transactions').insert([incomeTx]);
+        if (err1) throw err1;
+        
+        const { error: err2 } = await supabaseClient.from('transactions').insert([expenseTx]);
+        if (err2) throw err2;
+        
+        showToast(`ถอนเงินจากกระปุก "${title}" กลับเข้ากระเป๋าส่วนตัวสำเร็จแล้ว -${finalAmount.toLocaleString('th-TH')} บ.! 💸`, '🎉');
+        triggerCelebration();
+        
+        if (typeof loadGoals === 'function') await loadGoals();
+        if (typeof loadTransactions === 'function') await loadTransactions();
+    } catch (err) {
+        console.error("Error withdrawing from jar:", err);
+        showToast(`บันทึกการถอนเงินล้มเหลว: ${err.message}`, '❌', true);
+    }
+}
+
+/**
+ * 💸 ฟังก์ชันถอนเงินสะสมออกจากคลังเงินออมฉุกเฉินหลักกลับเข้ากระเป๋าส่วนตัว
+ */
+async function withdrawFromEmergencyPrompt() {
+    const mainTargetTitle = localStorage.getItem('emergencyTargetTitle') || 'เงินออมสำรองฉุกเฉิน';
+    
+    // 1. ค้นหายอดเงินออมทั่วไป (โหลหลัก)
+    const totalEl = document.getElementById('emergencyTotal');
+    const totalEmergencyBalance = totalEl ? (parseFloat(totalEl.innerText.replace(/[^0-9.-]+/g,"")) || 0) : 0;
+    
+    // คำนวณยอดที่ถูกกันไว้ในโหลย่อย
+    let earmarkedAmount = 0;
+    const saveGoals = (loadedGoalsCache || []).filter(g => {
+        if (!g || !g.title) return false;
+        let isSave = false;
+        let goalType = g.type;
+        const typeMatch = g.title.match(/^\[(save[a-zA-Z0-9_]*)\]\s*/);
+        if (typeMatch || goalType === 'save') {
+            isSave = true;
+        }
+        return isSave;
+    });
+
+    saveGoals.forEach(goal => {
+        if (!goal || !goal.title) return;
+        let goalTitle = goal.title;
+        const typeMatch = goalTitle.match(/^\[(save[a-zA-Z0-9_]*)\]\s*/);
+        if (typeMatch) {
+            goalTitle = goalTitle.replace(typeMatch[0], '');
+        }
+
+        let accumulated = 0;
+        if (loadedTxsCache) {
+            loadedTxsCache.forEach(tx => {
+                if (tx.owner === 'emergency') {
+                    const amt = parseFloat(tx.amount);
+                    const isMatch = tx.note && (tx.note.includes(`ภารกิจสำเร็จ: ${goalTitle}`) || tx.note.includes(`[ออมเพื่อ: ${goalTitle}]`));
+                    if (isMatch) {
+                        accumulated += (tx.type === 'income' ? amt : -amt);
+                    }
+                }
+            });
+        }
+        earmarkedAmount += accumulated;
+    });
+
+    const generalBalance = totalEmergencyBalance - earmarkedAmount;
+
+    if (generalBalance <= 0) {
+        showToast('โหลหลักนี้ยังไม่มีเงินสะสมให้ถอนครับ', '⚠️', true);
+        return;
+    }
+
+    const amountStr = await showCustomPrompt(
+        `กรุณากรอกจำนวนเงินที่ต้องการถอนออกจาก "${mainTargetTitle}" (บาท):<br><small class="text-muted">ยอดเงินที่มีสะสม: ${generalBalance.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บ.</small>`,
+        'ถอนเงินสำรองฉุกเฉิน',
+        '',
+        '0.00',
+        '💸'
+    );
+    if (amountStr === null || amountStr === '') return;
+    
+    const amount = parseFloat(amountStr);
+    if (isNaN(amount) || amount <= 0) {
+        showToast('กรุณากรอกจำนวนเงินให้ถูกต้องครับ', '⚠️', true);
+        return;
+    }
+
+    if (amount > generalBalance) {
+        showToast(`ยอดเงินถอนต้องไม่เกินยอดเงินสะสมที่มีอยู่ (${generalBalance.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บ.)`, '⚠️', true);
+        return;
+    }
+    
+    const finalAmount = parseFloat(amount.toFixed(2));
+    const userRole = window.currentUserRole || 'me';
+    
+    // 1. บันทึกเข้ากระเป๋าส่วนตัว (รายรับ: ลงทุน)
+    const incomeTx = {
+        amount: finalAmount,
+        type: 'income',
+        category_name: 'ลงทุน',
+        owner: userRole,
+        note: `[ถอนจากออมฉุกเฉิน] ถอนออมฉุกเฉิน`,
+        created_at: new Date().toISOString()
+    };
+    
+    // 2. หักออกกระเป๋าออมฉุกเฉิน (รายจ่าย: ลงทุน)
+    const expenseTx = {
+        amount: finalAmount,
+        type: 'expense',
+        category_name: 'ลงทุน',
+        owner: 'emergency',
+        note: `[ถอนจากออมฉุกเฉิน] ถอนออมฉุกเฉิน`,
+        created_at: new Date().toISOString()
+    };
+    
+    try {
+        const { error: err1 } = await supabaseClient.from('transactions').insert([incomeTx]);
+        if (err1) throw err1;
+        
+        const { error: err2 } = await supabaseClient.from('transactions').insert([expenseTx]);
+        if (err2) throw err2;
+        
+        showToast(`ถอนเงินจาก "${mainTargetTitle}" กลับเข้ากระเป๋าส่วนตัวสำเร็จแล้ว -${finalAmount.toLocaleString('th-TH')} บ.! 💸`, '🎉');
+        triggerCelebration();
+        
+        if (typeof loadGoals === 'function') await loadGoals();
+        if (typeof loadTransactions === 'function') await loadTransactions();
+    } catch (err) {
+        console.error("Error withdrawing from emergency:", err);
+        showToast(`บันทึกการถอนเงินล้มเหลว: ${err.message}`, '❌', true);
+    }
+}
+
+/**
+ * 📜 แสดงประวัติการออมและการถอนของโหลเป้าหมายย่อย
+ */
+function showJarHistory(goalId, title) {
+    const txs = [];
+    if (loadedTxsCache) {
+        loadedTxsCache.forEach(tx => {
+            if (tx.owner === 'emergency') {
+                const isMatch = tx.note && (tx.note.includes(`ภารกิจสำเร็จ: ${title}`) || tx.note.includes(`[ออมเพื่อ: ${title}]`));
+                if (isMatch) {
+                    txs.push(tx);
+                }
+            }
+        });
+    }
+
+    txs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    if (txs.length === 0) {
+        showCustomAlert(`<div class="text-center text-muted py-3">ยังไม่มีประวัติการออมในกระปุกนี้ครับ</div>`, `ประวัติการออม: ${title}`, '📜');
+        return;
+    }
+
+    let html = `<div style="max-height: 250px; overflow-y: auto; text-align: left; padding-right: 5px;">`;
+    txs.forEach(tx => {
+        const date = new Date(tx.created_at).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' });
+        const time = new Date(tx.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+        const amount = parseFloat(tx.amount);
+        const isDeposit = tx.type === 'income';
+        const colorClass = isDeposit ? 'text-success' : 'text-danger';
+        const sign = isDeposit ? '+' : '-';
+        const typeText = isDeposit ? 'ฝากเงิน' : 'ถอนเงิน';
+
+        html += `
+            <div class="d-flex justify-content-between align-items-center py-2 border-bottom" style="font-size: 0.8rem; border-color: rgba(0,0,0,0.05) !important;">
+                <div>
+                    <span class="fw-bold ${colorClass}">${sign}${amount.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บ.</span>
+                    <span class="d-block text-muted" style="font-size: 0.65rem;">${typeText} (${date} ${time})</span>
+                </div>
+                <span class="badge ${isDeposit ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'} rounded-pill" style="font-size: 0.65rem; padding: 3px 8px;">
+                    ${isDeposit ? 'ฝาก' : 'ถอน'}
+                </span>
+            </div>
+        `;
+    });
+    html += `</div>`;
+
+    showCustomAlert(html, `ประวัติการออม: ${title}`, '📜');
+}
+
+/**
+ * 📜 แสดงประวัติการออมและการถอนของโหลเงินหลัก (ออมสำรองฉุกเฉิน)
+ */
+function showEmergencyHistory() {
+    const mainTargetTitle = localStorage.getItem('emergencyTargetTitle') || 'เงินออมสำรองฉุกเฉิน';
+    
+    const subJarTitles = (loadedGoalsCache || []).map(g => {
+        if (!g || !g.title) return '';
+        const typeMatch = g.title.match(/^\[(save[a-zA-Z0-9_]*)\]\s*/);
+        return typeMatch ? g.title.replace(typeMatch[0], '') : g.title;
+    }).filter(t => t !== '');
+
+    const txs = [];
+    if (loadedTxsCache) {
+        loadedTxsCache.forEach(tx => {
+            if (tx.owner === 'emergency') {
+                let isSubJarTx = false;
+                for (let title of subJarTitles) {
+                    if (tx.note && (tx.note.includes(`ภารกิจสำเร็จ: ${title}`) || tx.note.includes(`[ออมเพื่อ: ${title}]`))) {
+                        isSubJarTx = true;
+                        break;
+                    }
+                }
+                if (!isSubJarTx) {
+                    txs.push(tx);
+                }
+            }
+        });
+    }
+
+    txs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    if (txs.length === 0) {
+        showCustomAlert(`<div class="text-center text-muted py-3">ยังไม่มีประวัติการออมในโหลหลักนี้ครับ</div>`, `ประวัติ: ${mainTargetTitle}`, '📜');
+        return;
+    }
+
+    let html = `<div style="max-height: 250px; overflow-y: auto; text-align: left; padding-right: 5px;">`;
+    txs.forEach(tx => {
+        const date = new Date(tx.created_at).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' });
+        const time = new Date(tx.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+        const amount = parseFloat(tx.amount);
+        const isDeposit = tx.type === 'income';
+        const colorClass = isDeposit ? 'text-success' : 'text-danger';
+        const sign = isDeposit ? '+' : '-';
+        const typeText = isDeposit ? 'ฝากเงิน' : 'ถอนเงิน';
+
+        html += `
+            <div class="d-flex justify-content-between align-items-center py-2 border-bottom" style="font-size: 0.8rem; border-color: rgba(0,0,0,0.05) !important;">
+                <div>
+                    <span class="fw-bold ${colorClass}">${sign}${amount.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บ.</span>
+                    <span class="d-block text-muted" style="font-size: 0.65rem;">${typeText} (${date} ${time})</span>
+                </div>
+                <span class="badge ${isDeposit ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'} rounded-pill" style="font-size: 0.65rem; padding: 3px 8px;">
+                    ${isDeposit ? 'ฝาก' : 'ถอน'}
+                </span>
+            </div>
+        `;
+    });
+    html += `</div>`;
+
+    showCustomAlert(html, `ประวัติ: ${mainTargetTitle}`, '📜');
 }
 
