@@ -942,6 +942,15 @@
             <div id="customDialogInputArea" class="mb-4 d-none">
                 <input type="number" id="customDialogInput" class="form-control text-center fw-bold border-indigo" 
                     placeholder="0.00" step="any" inputmode="decimal" style="border-radius: 12px; font-size: 1.15rem; padding: 10px; box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.2);">
+                <!-- 🎯 ปุ่มลัดยอดเงินสำเร็จรูปสำหรับ Custom Prompt -->
+                <div class="preset-container justify-content-center mt-3">
+                    <button type="button" onclick="adjustDialogAmount(20)" class="preset-btn">+20</button>
+                    <button type="button" onclick="adjustDialogAmount(50)" class="preset-btn">+50</button>
+                    <button type="button" onclick="adjustDialogAmount(100)" class="preset-btn">+100</button>
+                    <button type="button" onclick="adjustDialogAmount(500)" class="preset-btn">+500</button>
+                    <button type="button" onclick="adjustDialogAmount(1000)" class="preset-btn">+1,000</button>
+                    <button type="button" onclick="clearDialogAmount()" class="preset-btn text-danger">ล้าง</button>
+                </div>
             </div>
             <div class="d-flex gap-2 justify-content-center">
                 <button id="customDialogCancelBtn"

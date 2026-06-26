@@ -540,3 +540,23 @@ function showCustomPrompt(message, title = 'ระบุจำนวนเงิ
         };
     });
 }
+
+/**
+ * 🎯 ปรับปรุงยอดเงินในช่องกรอกเงินของ Custom Prompt Modal
+ */
+function adjustDialogAmount(val) {
+    const inputEl = document.getElementById('customDialogInput');
+    if (!inputEl) return;
+    
+    let currentVal = parseFloat(inputEl.value) || 0;
+    currentVal += val;
+    inputEl.value = currentVal;
+}
+
+/**
+ * 🎯 ล้างยอดเงินในช่องกรอกเงินของ Custom Prompt Modal
+ */
+function clearDialogAmount() {
+    const inputEl = document.getElementById('customDialogInput');
+    if (inputEl) inputEl.value = '';
+}
