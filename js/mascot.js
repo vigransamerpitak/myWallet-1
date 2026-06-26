@@ -31,6 +31,7 @@ function calculateAIInsights(txs, totalMePaidShared, totalPartnerPaidShared, goa
 
     // กรองเฉพาะเดือนเป้าหมายที่เป็นรายจ่าย
     const currentMonthExpenses = txs.filter(tx => {
+        if (tx.owner === 'emergency') return false; // ข้ามของบัญชีออมฉุกเฉินเพื่อป้องกันนับยอดออมซ้ำซ้อน
         if (filterDate === 'all') return tx.type === 'expense';
         const d = new Date(tx.created_at);
         return d.getMonth() === targetMonth && d.getFullYear() === targetYear && tx.type === 'expense';

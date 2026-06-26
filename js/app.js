@@ -112,6 +112,8 @@ function renderMonthlyTrend(allTxs) {
     // สรุปยอดรายรับ/รายจ่ายแต่ละเดือน
     const monthlyData = months.map(m => ({ ...m, income: 0, expense: 0 }));
     allTxs.forEach(tx => {
+        if (tx.owner === 'emergency') return; // ป้องกันการนับซ้ำยอดโอนเงินออมภายในระบบ
+        
         const txDate = new Date(tx.created_at);
         const txAmount = parseFloat(tx.amount);
         const idx = monthlyData.findIndex(m => m.year === txDate.getFullYear() && m.month === txDate.getMonth());
@@ -477,8 +479,12 @@ async function loadTransactions() {
         let passTypeFilter = true; if (filterType !== 'all' && tx.type !== filterType) passTypeFilter = false;
 
         if (isCurrentFilterMonth && passOwnerFilter && passTypeFilter && tx.type === 'expense') {
-            if (!categorySummary[tx.category_name]) categorySummary[tx.category_name] = 0;
-            categorySummary[tx.category_name] += txAmount; totalExpenseFiltered += txAmount;
+            if (filterOwner === 'all' && exactOwner === 'emergency') {
+                // ข้ามการนับฝั่งบัญชีออมฉุกเฉินในภาพรวม เพื่อไม่ให้นับยอดออมซ้ำซ้อนกับกระเป๋าส่วนตัว
+            } else {
+                if (!categorySummary[tx.category_name]) categorySummary[tx.category_name] = 0;
+                categorySummary[tx.category_name] += txAmount; totalExpenseFiltered += txAmount;
+            }
         }
 
         if (!passOwnerFilter || !passTypeFilter || !isCurrentFilterMonth) return;
