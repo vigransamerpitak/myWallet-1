@@ -112,7 +112,17 @@ function renderMonthlyTrend(allTxs) {
     // สรุปยอดรายรับ/รายจ่ายแต่ละเดือน
     const monthlyData = months.map(m => ({ ...m, income: 0, expense: 0 }));
     allTxs.forEach(tx => {
-        if (tx.owner === 'emergency') return; // ป้องกันการนับซ้ำยอดโอนเงินออมภายในระบบ
+        const note = tx.note || '';
+        const isInternalTransfer = 
+            tx.owner === 'emergency' ||
+            note.includes('[โอนเข้าออมฉุกเฉิน]') ||
+            note.includes('[ถอนจากออมฉุกเฉิน]') ||
+            note.includes('[หักเงินออมภารกิจ]') ||
+            note.includes('[ถอนเงินออมภารกิจ]') ||
+            note.includes('[หักออมอัตโนมัติ') ||
+            note.includes('[ออมเพื่อ:');
+
+        if (isInternalTransfer) return; // ข้ามยอดเงินโอนออมภายใน ไม่นำมาคิดเป็นรายรับ/รายจ่ายจริงของบ้าน
         
         const txDate = new Date(tx.created_at);
         const txAmount = parseFloat(tx.amount);
@@ -479,8 +489,18 @@ async function loadTransactions() {
         let passTypeFilter = true; if (filterType !== 'all' && tx.type !== filterType) passTypeFilter = false;
 
         if (isCurrentFilterMonth && passOwnerFilter && passTypeFilter && tx.type === 'expense') {
-            if (filterOwner === 'all' && exactOwner === 'emergency') {
-                // ข้ามการนับฝั่งบัญชีออมฉุกเฉินในภาพรวม เพื่อไม่ให้นับยอดออมซ้ำซ้อนกับกระเป๋าส่วนตัว
+            const note = tx.note || '';
+            const isInternalTransfer = 
+                exactOwner === 'emergency' ||
+                note.includes('[โอนเข้าออมฉุกเฉิน]') ||
+                note.includes('[ถอนจากออมฉุกเฉิน]') ||
+                note.includes('[หักเงินออมภารกิจ]') ||
+                note.includes('[ถอนเงินออมภารกิจ]') ||
+                note.includes('[หักออมอัตโนมัติ') ||
+                note.includes('[ออมเพื่อ:');
+
+            if (isInternalTransfer) {
+                // ข้ามยอดเงินโอนออมภายใน เพื่อไม่ให้นับสะสมเป็นยอดรายจ่ายจริง
             } else {
                 if (!categorySummary[tx.category_name]) categorySummary[tx.category_name] = 0;
                 categorySummary[tx.category_name] += txAmount; totalExpenseFiltered += txAmount;
