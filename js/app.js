@@ -307,64 +307,20 @@ function renderAnalytics(summary, total, totalIncome, incomeSummary) {
     
     if (sortedCats.length === 0 && sortedIncomes.length === 0) {
         if (chartContainer) chartContainer.classList.add('d-none');
-        if (wrapper) { wrapper.className = "col-12 col-md-12"; }
+        if (wrapper) {
+            wrapper.classList.remove('d-none');
+            wrapper.className = "col-12 col-md-12";
+        }
         area.innerHTML = '<p class="text-center text-muted py-3 w-100 mb-0">❌ ไม่พบข้อมูลรายรับ/รายจ่ายตามตัวกรองนี้</p>';
         return;
     }
 
-    if (chartContainer) chartContainer.classList.remove('d-none');
-    if (wrapper) { wrapper.className = "col-12 col-md-7"; }
-
-    // 🟢 Section 1: รายรับ (ถ้ามี)
-    if (sortedIncomes.length > 0) {
-        const header = document.createElement('div');
-        header.className = "col-12 mt-1 mb-2";
-        header.innerHTML = `<h6 class="small fw-extrabold text-success d-flex align-items-center mb-1"><i class="bi bi-plus-circle-fill me-1.5"></i> 🟢 รายรับประจำช่วงเวลา (${formatBaht(totalIncome)})</h6>`;
-        area.appendChild(header);
-
-        sortedIncomes.forEach(item => {
-            const percentage = totalIncome > 0 ? ((item.amount / totalIncome) * 100).toFixed(1) : 0;
-            const col = document.createElement('div');
-            col.className = "col-12";
-            col.innerHTML = `
-                <div class="bg-light p-2 px-3 rounded-3 border mb-2">
-                    <div class="d-flex justify-content-between small fw-bold mb-1">
-                        <span class="text-dark">${typeof getCategoryEmoji === 'function' ? getCategoryEmoji(item.name) : item.name}</span>
-                        <span class="text-secondary">${formatBaht(item.amount)} (${percentage}%)</span>
-                    </div>
-                    <div class="progress" style="height: 6px;">
-                        <div class="progress-bar bg-success" style="width: ${percentage}%;"></div>
-                    </div>
-                </div>
-            `;
-            area.appendChild(col);
-        });
+    if (chartContainer) {
+        chartContainer.classList.remove('d-none');
+        chartContainer.className = "col-12 d-flex justify-content-center";
     }
-
-    // 🔴 Section 2: รายจ่าย (ถ้ามี)
-    if (sortedCats.length > 0) {
-        const header = document.createElement('div');
-        header.className = "col-12 mt-3 mb-2";
-        header.innerHTML = `<h6 class="small fw-extrabold text-danger d-flex align-items-center mb-1"><i class="bi bi-dash-circle-fill me-1.5"></i> 🔴 รายจ่ายประจำช่วงเวลา (${formatBaht(total)})</h6>`;
-        area.appendChild(header);
-
-        sortedCats.forEach(item => {
-            const percentage = total > 0 ? ((item.amount / total) * 100).toFixed(1) : 0;
-            const col = document.createElement('div');
-            col.className = "col-12";
-            col.innerHTML = `
-                <div class="bg-light p-2 px-3 rounded-3 border mb-2">
-                    <div class="d-flex justify-content-between small fw-bold mb-1">
-                        <span class="text-dark">${item.name === 'สลิปรอระบุหมวดหมู่' ? '⏳ รอระบุหมวดหมู่' : (typeof getCategoryEmoji === 'function' ? getCategoryEmoji(item.name) : item.name)}</span>
-                        <span class="text-secondary">${formatBaht(item.amount)} (${percentage}%)</span>
-                    </div>
-                    <div class="progress" style="height: 6px;">
-                        <div class="progress-bar" style="width: ${percentage}%; background-color: ${getCategoryColor(item.name)};"></div>
-                    </div>
-                </div>
-            `;
-            area.appendChild(col);
-        });
+    if (wrapper) {
+        wrapper.classList.add('d-none');
     }
 
     // Render Chart.js Pie/Doughnut Chart
@@ -418,7 +374,14 @@ function renderAnalytics(summary, total, totalIncome, incomeSummary) {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: false },
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            font: { size: 11, family: 'Sarabun, sans-serif' }
+                        }
+                    },
                     tooltip: {
                         callbacks: {
                             label: tooltipCallback
