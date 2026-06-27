@@ -1,5 +1,8 @@
 // js/ui.js - โมดูลดูแลหน้าจอ สลับแท็บ ธีมสี แจ้งเตือน เอฟเฟกต์แชร์กอด และอารมณ์ผู้ใช้ (UI & Interactions)
 
+// Global spend emotion variable to share between scripts
+window.currentSpendEmotion = '';
+
 /**
  * 🌓 สลับการแสดงผลของหน้าแท็บเมนูหลัก
  * @param {string} tabId - ไอดีของแท็บที่ต้องการเปิด ("dashboard", "history", "record", "tools")
@@ -288,10 +291,10 @@ function selectSpendEmotion(emotion, element) {
     const buttons = document.querySelectorAll('.emotion-btn');
     buttons.forEach(btn => btn.classList.remove('active'));
     
-    if (currentSpendEmotion === emotion) {
-        currentSpendEmotion = ''; // toggle ปิด
+    if (window.currentSpendEmotion === emotion) {
+        window.currentSpendEmotion = ''; // toggle ปิด
     } else {
-        currentSpendEmotion = emotion;
+        window.currentSpendEmotion = emotion;
         if (element) element.classList.add('active');
     }
 }
@@ -560,3 +563,33 @@ function clearDialogAmount() {
     const inputEl = document.getElementById('customDialogInput');
     if (inputEl) inputEl.value = '';
 }
+
+/**
+ * 🎯 ปรับปรุงยอดเงินในช่องกรอกเงินหลัก
+ */
+function adjustAmount(val) {
+    const amountInput = document.getElementById('txAmount');
+    if (!amountInput) return;
+    let currentVal = parseFloat(amountInput.value) || 0;
+    currentVal += val;
+    amountInput.value = currentVal;
+}
+
+/**
+ * 🎯 ล้างยอดเงินในช่องกรอกเงินหลัก
+ */
+function clearAmount() {
+    const amountInput = document.getElementById('txAmount');
+    if (amountInput) amountInput.value = '';
+}
+
+/**
+ * 🎯 เลือกและบันทึกแท็กคำจดจำด่วนลงในช่องบันทึกช่วยจำ
+ */
+function setNoteTag(tag) {
+    const noteInput = document.getElementById('txNote');
+    if (noteInput) {
+        noteInput.value = tag;
+    }
+}
+

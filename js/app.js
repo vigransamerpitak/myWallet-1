@@ -639,8 +639,8 @@ async function saveTransaction(categoryName, type) {
 
     let dbOwner = ownerInput.value;
     let finalNote = noteInput.value.trim();
-    if (type === 'expense' && currentSpendEmotion) {
-        finalNote = `[อารมณ์: ${currentSpendEmotion}] ${finalNote}`.trim();
+    if (type === 'expense' && window.currentSpendEmotion) {
+        finalNote = `[อารมณ์: ${window.currentSpendEmotion}] ${finalNote}`.trim();
     }
 
     const savingPurposeInput = document.getElementById('txSavingPurpose');
@@ -680,7 +680,7 @@ async function saveTransaction(categoryName, type) {
         showToast(`บันทึกไม่สำเร็จ: ${error.message}`, '❌', true);
     } else {
         amountInput.value = ''; noteInput.value = ''; if (slipInput) slipInput.value = '';
-        currentSpendEmotion = '';
+        window.currentSpendEmotion = '';
         const emotionButtons = document.querySelectorAll('.emotion-btn');
         emotionButtons.forEach(btn => btn.classList.remove('active'));
         if (savingPurposeInput) {
