@@ -147,23 +147,23 @@
             class="nav-tabs-premium d-flex justify-content-between p-1 bg-white rounded-4 shadow-2xs mb-4 border border-light overflow-x-auto gap-1">
             <button onclick="switchTab('dashboard')" id="tab-dashboard"
                 class="tab-btn active btn flex-fill py-2 px-3 fw-bold rounded-3 text-secondary text-nowrap">
-                <i class="bi bi-house-door-fill me-1"></i> หน้าหลัก
+                <i class="bi bi-grid-1x2-fill me-1.5"></i> แดชบอร์ด
             </button>
             <button onclick="switchTab('record')" id="tab-record"
                 class="tab-btn btn flex-fill py-2 px-3 fw-bold rounded-3 text-secondary text-nowrap">
-                <i class="bi bi-plus-circle-fill me-1"></i> จดบันทึก/สแกน
+                <i class="bi bi-pencil-square me-1.5"></i> บันทึกรายการ
             </button>
             <button onclick="switchTab('history')" id="tab-history"
                 class="tab-btn btn flex-fill py-2 px-3 fw-bold rounded-3 text-secondary text-nowrap">
-                <i class="bi bi-clock-history me-1"></i> ประวัติเงิน
+                <i class="bi bi-list-ul me-1.5"></i> ประวัติธุรกรรม
             </button>
             <button onclick="switchTab('analytics')" id="tab-analytics"
                 class="tab-btn btn flex-fill py-2 px-3 fw-bold rounded-3 text-secondary text-nowrap">
-                <i class="bi bi-bar-chart-line-fill me-1"></i> สถิติ & แนวโน้ม
+                <i class="bi bi-pie-chart-fill me-1.5"></i> สถิติ & วิเคราะห์
             </button>
             <button onclick="switchTab('tools')" id="tab-tools"
                 class="tab-btn btn flex-fill py-2 px-3 fw-bold rounded-3 text-secondary text-nowrap">
-                <i class="bi bi-controller me-1"></i> กิจกรรม & เครื่องมือ 🎰
+                <i class="bi bi-sliders me-1.5"></i> กิจกรรม & เครื่องมือ
             </button>
         </div>
 
@@ -282,18 +282,15 @@
                         <div class="p-3 rounded-4 d-flex align-items-center justify-content-between"
                             style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(244, 63, 94, 0.05)); border: 1px dashed rgba(99, 102, 241, 0.2); transition: all 0.3s ease;">
                             <div class="d-flex align-items-center gap-2.5">
-                                <span class="fs-4">💖</span>
+                                <span class="text-danger"><i class="bi bi-heart-fill fs-5"></i></span>
                                 <div class="text-start">
-                                    <div class="fw-bold text-dark" style="font-size: 0.78rem;">เคมีคู่รักนักออม (Couple
-                                        Synergy)</div>
-                                    <div class="text-secondary" style="font-size: 0.68rem;">
-                                        ช่วยกันออมและเคลียร์ภารกิจด้วยกัน!</div>
+                                    <div class="fw-bold text-dark" style="font-size: 0.78rem;">เคมีคู่รักนักออม (Couple Synergy)</div>
+                                    <div class="text-secondary" style="font-size: 0.68rem;">ช่วยกันออมและเคลียร์ภารกิจด้วยกัน!</div>
                                 </div>
                             </div>
                             <div class="text-end">
                                 <span class="badge bg-indigo rounded-pill fw-bold text-white shadow-xs"
-                                    style="font-size: 0.72rem; padding: 4px 8px;" id="coupleSynergyScore">90%
-                                    แข็งแกร่งมาก</span>
+                                    style="font-size: 0.72rem; padding: 4px 8px;" id="coupleSynergyScore">90% แข็งแกร่งมาก</span>
                             </div>
                         </div>
 
@@ -301,13 +298,13 @@
                         <div class="p-3 rounded-4 mt-auto mascot-quote-box"
                             style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.04), rgba(244, 63, 94, 0.04)); border: 1px dashed rgba(99, 102, 241, 0.2); transition: all 0.3s ease;">
                             <div class="d-flex align-items-center gap-2 mb-1.5">
-                                <span class="fs-5">💡</span>
+                                <span class="text-warning"><i class="bi bi-lightbulb-fill fs-5"></i></span>
                                 <span class="fw-bold text-indigo"
                                     style="font-size: 0.8rem; letter-spacing: 0.5px;">ข้อคิดการเงินฉบับคู่รักวันนี้</span>
                             </div>
                             <p id="mascotQuoteText" class="small mb-0 text-secondary"
                                 style="font-style: italic; line-height: 1.45;">
-                                "การคุยเรื่องเงินอย่างเปิดเผย คือความลับชีวิตคู่ที่ยืนยาวนะจ๊ะ 💖"
+                                "การคุยเรื่องเงินอย่างเปิดเผย คือความลับชีวิตคู่ที่ยืนยาวนะจ๊ะ"
                             </p>
                         </div>
                     </div>
@@ -482,13 +479,16 @@
         <div id="section-record" class="tab-section d-none">
             <!-- สแกนสลิปโอนเงิน -->
             <div class="premium-card">
-                <label class="form-label small fw-bold text-secondary">📷 สแกนสลิปโอนเงินอัจฉริยะ (ถ้ามี)</label>
-                <input type="file" id="slipInput" accept="image/*" multiple
-                    class="form-control form-control-sm rounded-3">
+                <label class="form-label small fw-bold text-secondary mb-2"><i class="bi bi-robot text-indigo me-1.5"></i> สแกนสลิปโอนเงินอัจฉริยะด้วย AI</label>
+                <div id="slipDropZone" class="slip-drop-zone text-center p-4 border border-dashed rounded-4 cursor-pointer" onclick="document.getElementById('slipInput').click()">
+                    <i class="bi bi-cloud-arrow-up-fill fs-2 text-indigo mb-2"></i>
+                    <p class="small fw-bold text-dark mb-1">ลากไฟล์สลิปมาวางที่นี่ หรือคลิกเพื่ออัปโหลด</p>
+                    <p class="text-muted mb-0" style="font-size: 0.72rem;">รองรับรูปสลิปจากแอปธนาคารไทยทุกค่าย (สแกนทีละหลายใบได้)</p>
+                    <input type="file" id="slipInput" accept="image/*" multiple style="display: none;">
+                </div>
                 <div id="slipPreviewArea" class="d-none mt-3 p-3 bg-light rounded-4 border"></div>
                 <div id="slipLoadingStatus" class="form-text text-primary d-none small mt-2">
-                    <span class="spinner-border spinner-border-sm me-1" role="status"></span> กำลังใช้ AI
-                    ถอดรหัสยอดเงินจากสลิปสักครู่...
+                    <span class="spinner-border spinner-border-sm me-1" role="status"></span> กำลังใช้ AI ถอดรหัสยอดเงินจากสลิปสักครู่...
                 </div>
             </div>
 

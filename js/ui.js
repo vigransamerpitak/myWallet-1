@@ -246,17 +246,17 @@ function applyDynamicNames() {
     
     // การ์ดแสดงผลบน Dashboard
     const labelWalletMe = document.getElementById('labelWalletMe');
-    if (labelWalletMe) labelWalletMe.innerText = `กระเป๋า${nameMe} 🙋‍♂️`;
+    if (labelWalletMe) labelWalletMe.innerHTML = `<i class="bi bi-person text-indigo me-1.5"></i> กระเป๋า${nameMe}`;
     
     const labelWalletPartner = document.getElementById('labelWalletPartner');
-    if (labelWalletPartner) labelWalletPartner.innerText = `กระเป๋า${namePartner} 🙋‍♀️`;
+    if (labelWalletPartner) labelWalletPartner.innerHTML = `<i class="bi bi-person text-pink me-1.5"></i> กระเป๋า${namePartner}`;
     
     // ดรอปดาวน์ในฟอร์มจดบันทึก
     const optOwnerMe = document.getElementById('optOwnerMe');
-    if (optOwnerMe) optOwnerMe.innerText = `🙋‍♂️ กระเป๋าส่วนตัว (${nameMe})`;
+    if (optOwnerMe) optOwnerMe.innerText = `👤 กระเป๋าส่วนตัว (${nameMe})`;
     
     const optOwnerPartner = document.getElementById('optOwnerPartner');
-    if (optOwnerPartner) optOwnerPartner.innerText = `🙋‍♀️ กระเป๋าส่วนตัว (${namePartner})`;
+    if (optOwnerPartner) optOwnerPartner.innerText = `👤 กระเป๋าส่วนตัว (${namePartner})`;
     
     const optOwnerSharedMe = document.getElementById('optOwnerSharedMe');
     if (optOwnerSharedMe) optOwnerSharedMe.innerText = `🤝 เงินกองกลาง (${nameMe} ออกก่อน)`;
@@ -266,18 +266,18 @@ function applyDynamicNames() {
     
     // ดรอปดาวน์ตัวเลือกกรอง
     const filterMe = document.querySelector("#filterOwner option[value='me']");
-    if (filterMe) filterMe.innerText = `🙋‍♂️ เฉพาะของ${nameMe}`;
+    if (filterMe) filterMe.innerText = `👤 เฉพาะของ${nameMe}`;
     
     const filterPartner = document.querySelector("#filterOwner option[value='partner']");
-    if (filterPartner) filterPartner.innerText = `🙋‍♀️ เฉพาะของ${namePartner}`;
+    if (filterPartner) filterPartner.innerText = `👤 เฉพาะของ${namePartner}`;
     
     // ยอดผู้เปิดใช้ระบบปัจจุบัน
     const userDisplay = document.getElementById('userDisplay');
     if (userDisplay) {
         if (window.currentUserRole === 'me') {
-            userDisplay.innerHTML = `🙋‍♂️ ผู้ใช้งานระบบปัจจุบัน: <span class="text-primary">${nameMe}</span>`;
+            userDisplay.innerHTML = `<i class="bi bi-person-circle text-indigo me-1.5"></i> ผู้ใช้ปัจจุบัน: <span class="fw-bold">${nameMe}</span>`;
         } else {
-            userDisplay.innerHTML = `🙋‍♀️ ผู้ใช้งานระบบปัจจุบัน: <span class="text-danger">${namePartner}</span>`;
+            userDisplay.innerHTML = `<i class="bi bi-person-circle text-pink me-1.5"></i> ผู้ใช้ปัจจุบัน: <span class="fw-bold">${namePartner}</span>`;
         }
     }
 

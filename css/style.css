@@ -44,58 +44,51 @@ body {
 }
 
 .balance-card {
-    border: none !important;
+    border: 1px solid var(--card-border) !important;
     border-radius: 20px !important;
-    padding: 1.25rem 1rem !important;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 1.25rem 1.25rem !important;
+    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.02) !important;
+}
+
+.balance-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 5px;
+    border-radius: 5px 0 0 5px;
 }
 
 .balance-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 20px rgba(148, 163, 184, 0.08) !important;
+    box-shadow: 0 10px 24px rgba(99, 102, 241, 0.08) !important;
+    border-color: rgba(99, 102, 241, 0.2) !important;
 }
 
-/* Light mode wallets */
-.bg-my-wallet {
-    background-color: #eff6ff;
-    color: #1e6091;
+/* Light mode & Dark mode wallet card resets */
+.bg-my-wallet, .bg-partner-wallet, .bg-shared-wallet, .bg-emergency-wallet,
+[data-theme="dark"] .bg-my-wallet, [data-theme="dark"] .bg-partner-wallet,
+[data-theme="dark"] .bg-shared-wallet, [data-theme="dark"] .bg-emergency-wallet {
+    background-color: var(--card-bg) !important;
+    color: var(--color-text) !important;
+    border: 1px solid var(--card-border) !important;
 }
 
-.bg-partner-wallet {
-    background-color: #fff1f2;
-    color: #e11d48;
+.bg-my-wallet::before {
+    background-color: #6366f1 !important; /* Indigo */
 }
-
-.bg-shared-wallet {
-    background-color: #fef9c3;
-    color: #854d0e;
+.bg-partner-wallet::before {
+    background-color: #ec4899 !important; /* Pink */
 }
-
-.bg-emergency-wallet {
-    background-color: #ecfdf5;
-    color: #065f46;
-    border: 1px solid rgba(16, 185, 129, 0.2) !important;
+.bg-shared-wallet::before {
+    background-color: #f59e0b !important; /* Amber */
 }
-
-/* Dark mode wallets overrides */
-[data-theme="dark"] .bg-my-wallet {
-    background-color: #1e3a8a !important;
-    color: #93c5fd !important;
-}
-
-[data-theme="dark"] .bg-partner-wallet {
-    background-color: #881337 !important;
-    color: #fca5a5 !important;
-}
-
-[data-theme="dark"] .bg-shared-wallet {
-    background-color: #713f12 !important;
-    color: #fde047 !important;
-}
-
-[data-theme="dark"] .bg-emergency-wallet {
-    background-color: #064e3b !important;
-    color: #6ee7b7 !important;
+.bg-emergency-wallet::before {
+    background-color: #10b981 !important; /* Emerald */
 }
 
 .form-control,
@@ -264,8 +257,10 @@ body {
 .tab-btn {
     border: none !important;
     color: var(--color-text-muted) !important;
-    transition: all 0.2s ease;
-    font-size: 0.95rem;
+    transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
+    font-size: 0.92rem;
+    padding: 0.5rem 1rem !important;
+    border-radius: 12px !important;
 }
 
 .tab-btn:hover {
@@ -274,9 +269,10 @@ body {
 }
 
 .tab-btn.active {
-    background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
-    color: #ffffff !important;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+    background-color: rgba(99, 102, 241, 0.08) !important;
+    color: #4f46e5 !important;
+    font-weight: 700 !important;
+    box-shadow: none !important;
 }
 
 /* Preset Amount styles */
@@ -288,18 +284,18 @@ body {
 }
 
 .preset-btn {
-    border-radius: 10px !important;
-    font-size: 0.8rem !important;
-    padding: 4px 10px !important;
-    border: 1px dashed var(--card-border) !important;
-    color: var(--color-text) !important;
-    background: transparent;
-    transition: all 0.15s ease;
+    border-radius: 12px !important;
+    font-size: 0.78rem !important;
+    padding: 5px 12px !important;
+    border: 1px solid var(--card-border) !important;
+    color: var(--color-text-muted) !important;
+    background-color: var(--light-bg);
+    transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
     font-weight: 600;
 }
 
 .preset-btn:hover {
-    background-color: var(--light-bg);
+    background-color: rgba(99, 102, 241, 0.05);
     border-color: #6366f1 !important;
     color: #6366f1 !important;
     transform: translateY(-1px);
@@ -936,4 +932,59 @@ html, body, .overflow-y-auto, #savingsJarsContainer, #goalsList, #recurringBills
     border-color: var(--card-border) !important;
     cursor: not-allowed;
     transform: none;
+}
+
+/* ==================== 📸 SLIP UPLOAD DROP ZONE ==================== */
+.slip-drop-zone {
+    border: 2px dashed rgba(99, 102, 241, 0.25) !important;
+    background-color: var(--light-bg) !important;
+    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.01);
+}
+
+.slip-drop-zone:hover, .slip-drop-zone.dragover {
+    border-color: #6366f1 !important;
+    background-color: rgba(99, 102, 241, 0.03) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.05) !important;
+}
+
+.slip-drop-zone i {
+    transition: transform 0.3s ease;
+}
+
+.slip-drop-zone:hover i, .slip-drop-zone.dragover i {
+    transform: scale(1.1);
+}
+
+/* Sleek Low-Profile Ledger Buttons */
+.btn-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50% !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--card-border) !important;
+    background-color: var(--light-bg);
+    color: var(--color-text-muted) !important;
+    font-size: 0.85rem;
+    transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
+    padding: 0 !important;
+}
+
+.btn-icon:hover {
+    transform: scale(1.08);
+}
+
+.btn-edit:hover {
+    background-color: rgba(245, 158, 11, 0.08) !important;
+    border-color: #f59e0b !important;
+    color: #f59e0b !important;
+}
+
+.btn-delete:hover {
+    background-color: rgba(244, 63, 94, 0.08) !important;
+    border-color: #f43f5e !important;
+    color: #f43f5e !important;
 }

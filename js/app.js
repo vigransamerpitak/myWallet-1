@@ -83,13 +83,13 @@ function syncEmergencyLabels() {
     const saved = localStorage.getItem('emergencyTargetTitle') || 'เงินออมสำรองฉุกเฉิน';
 
     const labelWalletEmergency = document.getElementById('labelWalletEmergency');
-    if (labelWalletEmergency) labelWalletEmergency.innerText = `${saved} 🎯`;
+    if (labelWalletEmergency) labelWalletEmergency.innerHTML = `<i class="bi bi-shield-fill-check text-success me-1.5"></i> ${saved}`;
 
     const optOwnerEmergency = document.getElementById('optOwnerEmergency');
-    if (optOwnerEmergency) optOwnerEmergency.innerText = `🚨 บัญชีออม (${saved})`;
+    if (optOwnerEmergency) optOwnerEmergency.innerText = `🛡️ บัญชีออม (${saved})`;
 
     const filterEmergency = document.getElementById('filterEmergency');
-    if (filterEmergency) filterEmergency.innerText = `🎯 เฉพาะ${saved}`;
+    if (filterEmergency) filterEmergency.innerText = `🛡️ เฉพาะ${saved}`;
 
     const labelChartEmergency = document.getElementById('labelChartEmergency');
     if (labelChartEmergency) labelChartEmergency.innerText = saved;
@@ -225,8 +225,14 @@ function renderMonthlyTrend(allTxs) {
                 },
                 y: {
                     beginAtZero: true,
-                    grid: { color: 'rgba(0, 0, 0, 0.05)' },
-                    ticks: { font: { size: 10, family: 'Sarabun, sans-serif' } }
+                    grid: { color: 'rgba(148, 163, 184, 0.08)' },
+                    ticks: {
+                        font: { size: 10, family: 'Sarabun, sans-serif' },
+                        callback: function (value) {
+                            if (value >= 1000) return (value / 1000) + 'k';
+                            return value;
+                        }
+                    }
                 }
             }
         }
@@ -462,10 +468,10 @@ function renderSavingsTrend(allTxs) {
                 borderWidth: 3,
                 backgroundColor: gradient || 'rgba(16, 185, 129, 0.1)',
                 fill: true,
-                tension: 0.35, // Smooth curves
+                tension: 0.4, // Smooth curves
                 pointBackgroundColor: '#10b981',
-                pointRadius: 4,
-                pointHoverRadius: 6
+                pointRadius: 3,
+                pointHoverRadius: 5
             }]
         },
         options: {
@@ -488,8 +494,14 @@ function renderSavingsTrend(allTxs) {
                 },
                 y: {
                     beginAtZero: true,
-                    grid: { color: 'rgba(0, 0, 0, 0.05)' },
-                    ticks: { font: { size: 10, family: 'Sarabun, sans-serif' } }
+                    grid: { color: 'rgba(148, 163, 184, 0.08)' },
+                    ticks: {
+                        font: { size: 10, family: 'Sarabun, sans-serif' },
+                        callback: function (value) {
+                            if (value >= 1000) return (value / 1000) + 'k';
+                            return value;
+                        }
+                    }
                 }
             }
         }
@@ -785,16 +797,16 @@ async function loadTransactions() {
 
     pageItems.forEach(({ tx, txDate, txAmount, exactOwner, cleanNote, emotion }) => {
         let ownerBadge = '';
-        if (exactOwner === 'me') ownerBadge = `<span class="badge bg-primary-subtle text-primary">🙋‍♂️ ${nameMe}</span>`;
-        else if (exactOwner === 'partner') ownerBadge = `<span class="badge bg-danger-subtle text-danger">🙋‍♀️ ${namePartner}</span>`;
-        else if (exactOwner === 'emergency') ownerBadge = `<span class="badge bg-success text-white">🎯 ${emergencyTitle}</span>`;
-        else if (exactOwner === 'shared-me') ownerBadge = `<span class="badge bg-warning text-dark">🤝 กองกลาง (${nameMe}จ่าย)</span>`;
-        else if (exactOwner === 'shared-partner') ownerBadge = `<span class="badge bg-warning text-dark">🤝 กองกลาง (${namePartner}จ่าย)</span>`;
-        else ownerBadge = '<span class="badge bg-warning text-dark">🤝 กองกลาง</span>';
+        if (exactOwner === 'me') ownerBadge = `<span class="badge bg-primary-subtle text-primary border border-primary border-opacity-10"><i class="bi bi-person-fill me-1"></i>${nameMe}</span>`;
+        else if (exactOwner === 'partner') ownerBadge = `<span class="badge bg-danger-subtle text-danger border border-danger border-opacity-10"><i class="bi bi-person-fill me-1"></i>${namePartner}</span>`;
+        else if (exactOwner === 'emergency') ownerBadge = `<span class="badge bg-success-subtle text-success border border-success border-opacity-10"><i class="bi bi-shield-fill-check me-1"></i>${emergencyTitle}</span>`;
+        else if (exactOwner === 'shared-me') ownerBadge = `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning border-opacity-10"><i class="bi bi-people-fill me-1"></i>กองกลาง (โบ๊ท)</span>`;
+        else if (exactOwner === 'shared-partner') ownerBadge = `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning border-opacity-10"><i class="bi bi-people-fill me-1"></i>กองกลาง (เอิร์น)</span>`;
+        else ownerBadge = '<span class="badge bg-warning-subtle text-warning-emphasis border border-warning border-opacity-10"><i class="bi bi-people-fill me-1"></i>กองกลาง</span>';
 
         let displayNoteText = cleanNote;
         if (displayNoteText.includes('[SLIP_URL:')) {
-            displayNoteText = displayNoteText.replace(/\[SLIP_URL:.*?\]/g, '').trim() || '📷 แนบไฟล์สลิป (คลิก ✏️ แก้ เพื่อลงหมวดหมู่จริง)';
+            displayNoteText = displayNoteText.replace(/\[SLIP_URL:.*?\]/g, '').trim() || '📷 แนบไฟล์สลิป (คลิกแก้ไขเพื่อลงหมวดหมู่)';
         }
 
         const safeNote = escapeForAttr(tx.note || '');
@@ -806,9 +818,12 @@ async function loadTransactions() {
         row.innerHTML = `
             <td class="small text-muted">${dateStr}</td>
             <td>${ownerBadge}</td>
-            <td class="fw-medium ${tx.type === 'expense' ? 'text-danger' : 'text-success'}">${tx.type === 'expense' ? 'รายจ่าย 🔴' : 'รายรับ 🟢'}</td>
-            <td class="fw-semibold ${tx.category_name === 'สลิปรอระบุหมวดหมู่' ? 'text-warning' : ''}">
-                ${tx.category_name === 'สลิปรอระบุหมวดหมู่' ? '⏳ รอระบุหมวดหมู่' : getCategoryEmoji(tx.category_name)}
+            <td class="fw-medium ${tx.type === 'expense' ? 'text-danger' : 'text-success'}">
+                <i class="bi ${tx.type === 'expense' ? 'bi-arrow-down-right-circle-fill text-danger' : 'bi-arrow-up-right-circle-fill text-success'} me-1.5"></i>
+                ${tx.type === 'expense' ? 'รายจ่าย' : 'รายรับ'}
+            </td>
+            <td class="fw-medium">
+                ${getCategoryIconHtml(tx.category_name)}
             </td>
             <td class="fw-bold">${formatBaht(txAmount)}</td>
             <td class="text-muted small">
@@ -816,8 +831,12 @@ async function loadTransactions() {
                 ${displayNoteText || '-'}
             </td>
             <td class="text-center whitespace-nowrap">
-                <button onclick="enterEditMode(${tx.id}, ${txAmount}, '${safeNote}', '${safeOwner}', '${safeCategory}')" class="btn btn-outline-warning btn-sm py-0 px-2 cursor-pointer" style="border-radius:6px;">✏️ แก้</button>
-                <button onclick="deleteTransaction(${tx.id})" data-delete-id="${tx.id}" class="btn btn-outline-danger btn-sm py-0 px-2 cursor-pointer" style="border-radius:6px;">🗑️ ลบ</button>
+                <button onclick="enterEditMode(${tx.id}, ${txAmount}, '${safeNote}', '${safeOwner}', '${safeCategory}')" class="btn btn-icon btn-edit cursor-pointer me-1.5" title="แก้ไขรายการ">
+                    <i class="bi bi-pencil-fill"></i>
+                </button>
+                <button onclick="deleteTransaction(${tx.id})" data-delete-id="${tx.id}" class="btn btn-icon btn-delete cursor-pointer" title="ลบรายการ">
+                    <i class="bi bi-trash-fill"></i>
+                </button>
             </td>
         `;
         tbody.appendChild(row);
@@ -1795,7 +1814,16 @@ function drawWheel(angle) {
     const arcSize = (2 * Math.PI) / numSegments;
 
     ctx.clearRect(0, 0, width, height);
-    const colors = ["#ffb7b2", "#ffdac1", "#e2f0cb", "#b5ead7", "#c7ceea", "#ff9aa2", "#e8d7ff", "#d5ebff"];
+    
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const colors = isDark 
+        ? ["#1e1b4b", "#0c4a6e", "#064e3b", "#4c0519", "#451a03", "#3b0764", "#115e59", "#4a044e"]
+        : ["#e0e7ff", "#e0f2fe", "#d1fae5", "#ffe4e6", "#fef3c7", "#f3e8ff", "#ccfbf1", "#fae8ff"];
+    const textColor = isDark ? "#cbd5e1" : "#1e293b";
+    const strokeColor = isDark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.8)";
+    const centerBg = isDark ? "#818cf8" : "#6366f1";
+    const centerStroke = isDark ? "#6366f1" : "#4f46e5";
+    const centerTextColor = "#ffffff";
 
     for (let i = 0; i < numSegments; i++) {
         const segAngle = angle + i * arcSize;
@@ -1805,28 +1833,35 @@ function drawWheel(angle) {
         ctx.arc(radius, radius, radius - 10, segAngle, segAngle + arcSize);
         ctx.lineTo(radius, radius);
         ctx.fill();
-        ctx.strokeStyle = "rgba(255,255,255,0.8)";
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = 1.5;
         ctx.stroke();
 
         ctx.save();
-        ctx.fillStyle = "#2d3748";
-        ctx.font = "bold 11px 'Sarabun', sans-serif";
+        ctx.fillStyle = textColor;
+        ctx.font = "600 11px 'Sarabun', sans-serif";
         ctx.textAlign = "right";
         ctx.textBaseline = "middle";
         ctx.translate(radius, radius);
         ctx.rotate(segAngle + arcSize / 2);
-        ctx.fillText(wheelTasks[i].text, radius - 25, 0);
+        ctx.fillText(wheelTasks[i].text, radius - 22, 0);
         ctx.restore();
     }
 
-    ctx.beginPath(); ctx.arc(radius, radius, 25, 0, 2 * Math.PI);
-    ctx.fillStyle = "#fbbf24"; ctx.fill();
-    ctx.strokeStyle = "#d97706"; ctx.lineWidth = 3; ctx.stroke();
+    // Center button drawing
+    ctx.beginPath(); 
+    ctx.arc(radius, radius, 24, 0, 2 * Math.PI);
+    ctx.fillStyle = centerBg; 
+    ctx.fill();
+    ctx.strokeStyle = centerStroke; 
+    ctx.lineWidth = 2.5; 
+    ctx.stroke();
 
-    ctx.fillStyle = "#78350f"; ctx.font = "bold 12px 'Sarabun', sans-serif";
-    ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText("🎰", radius, radius);
+    ctx.fillStyle = centerTextColor; 
+    ctx.font = "bold 11px 'Sarabun', sans-serif";
+    ctx.textAlign = "center"; 
+    ctx.textBaseline = "middle";
+    ctx.fillText("หมุน!", radius, radius);
 }
 
 async function spinWheel() {
@@ -2322,7 +2357,7 @@ async function processSingleSlip(file, liveGeminiKey) {
         reader.onloadend = () => resolve(reader.result.split(',')[1]);
     });
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${liveGeminiKey}`;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${liveGeminiKey}`;
     const promptPayload = {
         contents: [{
             parts: [
@@ -2540,13 +2575,40 @@ function renderSlipPreviews() {
 
 function setupSlipScannerListener() {
     const slipInput = document.getElementById('slipInput');
+    const dropZone = document.getElementById('slipDropZone');
     if (!slipInput) return;
+    
     slipInput.addEventListener('change', (e) => {
         const files = Array.from(e.target.files);
         if (files.length === 0) return;
         pendingSlipFiles = files;
         renderSlipPreviews();
     });
+
+    if (dropZone) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            }, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt ? Array.from(dt.files) : [];
+            if (files.length === 0) return;
+            pendingSlipFiles = files;
+            renderSlipPreviews();
+        }, false);
+    }
 }
 
 // === 🚪 System Logouts & Filters (ระบบล็อกเอ้าท์และกรองประวัติ) ===
