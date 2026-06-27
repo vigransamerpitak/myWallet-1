@@ -250,7 +250,7 @@ function renderMonthlyTrend(allTxs) {
     `;
 }
 
-function renderAnalytics(summary, total, totalIncome) {
+function renderAnalytics(summary, total, totalIncome, incomeSummary) {
     const area = document.getElementById('analyticsArea');
     if (!area) return;
     area.innerHTML = '';
@@ -300,37 +300,72 @@ function renderAnalytics(summary, total, totalIncome) {
     }
 
     const sortedCats = Object.keys(summary).map(name => ({ name: name, amount: summary[name] })).sort((a, b) => b.amount - a.amount);
+    const sortedIncomes = incomeSummary ? Object.keys(incomeSummary).map(name => ({ name: name, amount: incomeSummary[name] })).sort((a, b) => b.amount - a.amount) : [];
     
     const chartContainer = document.getElementById('categoryChartContainer');
     const wrapper = document.getElementById('analyticsWrapper');
     
-    if (sortedCats.length === 0) {
+    if (sortedCats.length === 0 && sortedIncomes.length === 0) {
         if (chartContainer) chartContainer.classList.add('d-none');
         if (wrapper) { wrapper.className = "col-12 col-md-12"; }
-        area.innerHTML = '<p class="text-center text-muted py-3 w-100 mb-0">❌ ไม่พบสัดส่วนข้อมูลรายจ่ายตามตัวกรองนี้</p>';
+        area.innerHTML = '<p class="text-center text-muted py-3 w-100 mb-0">❌ ไม่พบข้อมูลรายรับ/รายจ่ายตามตัวกรองนี้</p>';
         return;
     }
 
     if (chartContainer) chartContainer.classList.remove('d-none');
     if (wrapper) { wrapper.className = "col-12 col-md-7"; }
 
-    sortedCats.forEach(item => {
-        const percentage = total > 0 ? ((item.amount / total) * 100).toFixed(1) : 0;
-        const col = document.createElement('div');
-        col.className = "col-12";
-        col.innerHTML = `
-            <div class="bg-light p-2 px-3 rounded-3 border mb-2">
-                <div class="d-flex justify-content-between small fw-bold mb-1">
-                    <span class="text-dark">${item.name === 'สลิปรอระบุหมวดหมู่' ? '⏳ รอระบุหมวดหมู่' : (typeof getCategoryEmoji === 'function' ? getCategoryEmoji(item.name) : item.name)}</span>
-                    <span class="text-secondary">${formatBaht(item.amount)} (${percentage}%)</span>
+    // 🟢 Section 1: รายรับ (ถ้ามี)
+    if (sortedIncomes.length > 0) {
+        const header = document.createElement('div');
+        header.className = "col-12 mt-1 mb-2";
+        header.innerHTML = `<h6 class="small fw-extrabold text-success d-flex align-items-center mb-1"><i class="bi bi-plus-circle-fill me-1.5"></i> 🟢 รายรับประจำช่วงเวลา (${formatBaht(totalIncome)})</h6>`;
+        area.appendChild(header);
+
+        sortedIncomes.forEach(item => {
+            const percentage = totalIncome > 0 ? ((item.amount / totalIncome) * 100).toFixed(1) : 0;
+            const col = document.createElement('div');
+            col.className = "col-12";
+            col.innerHTML = `
+                <div class="bg-light p-2 px-3 rounded-3 border mb-2">
+                    <div class="d-flex justify-content-between small fw-bold mb-1">
+                        <span class="text-dark">${typeof getCategoryEmoji === 'function' ? getCategoryEmoji(item.name) : item.name}</span>
+                        <span class="text-secondary">${formatBaht(item.amount)} (${percentage}%)</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-success" style="width: ${percentage}%;"></div>
+                    </div>
                 </div>
-                <div class="progress" style="height: 6px;">
-                    <div class="progress-bar" style="width: ${percentage}%; background-color: ${getCategoryColor(item.name)};"></div>
+            `;
+            area.appendChild(col);
+        });
+    }
+
+    // 🔴 Section 2: รายจ่าย (ถ้ามี)
+    if (sortedCats.length > 0) {
+        const header = document.createElement('div');
+        header.className = "col-12 mt-3 mb-2";
+        header.innerHTML = `<h6 class="small fw-extrabold text-danger d-flex align-items-center mb-1"><i class="bi bi-dash-circle-fill me-1.5"></i> 🔴 รายจ่ายประจำช่วงเวลา (${formatBaht(total)})</h6>`;
+        area.appendChild(header);
+
+        sortedCats.forEach(item => {
+            const percentage = total > 0 ? ((item.amount / total) * 100).toFixed(1) : 0;
+            const col = document.createElement('div');
+            col.className = "col-12";
+            col.innerHTML = `
+                <div class="bg-light p-2 px-3 rounded-3 border mb-2">
+                    <div class="d-flex justify-content-between small fw-bold mb-1">
+                        <span class="text-dark">${item.name === 'สลิปรอระบุหมวดหมู่' ? '⏳ รอระบุหมวดหมู่' : (typeof getCategoryEmoji === 'function' ? getCategoryEmoji(item.name) : item.name)}</span>
+                        <span class="text-secondary">${formatBaht(item.amount)} (${percentage}%)</span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar" style="width: ${percentage}%; background-color: ${getCategoryColor(item.name)};"></div>
+                    </div>
                 </div>
-            </div>
-        `;
-        area.appendChild(col);
-    });
+            `;
+            area.appendChild(col);
+        });
+    }
 
     // Render Chart.js Pie/Doughnut Chart
     const ctx = document.getElementById('categoryPieChart');
@@ -648,7 +683,7 @@ async function loadTransactions() {
     let myTotal = 0; let partnerTotal = 0; let sharedTotal = 0; let emergencyTotal = 0;
     let totalMePaidShared = 0; let totalPartnerPaidShared = 0;
     let totalMeActualShare = 0; let totalPartnerActualShare = 0;
-    let categorySummary = {}; let totalExpenseFiltered = 0; let totalIncomeFiltered = 0;
+    let categorySummary = {}; let incomeSummary = {}; let totalExpenseFiltered = 0; let totalIncomeFiltered = 0;
     const now = new Date(); const thisMonth = now.getMonth(); const thisYear = now.getFullYear();
 
     filteredTxsCache = [];
@@ -744,6 +779,8 @@ async function loadTransactions() {
                     }
                     if (passOwnerIncome) {
                         totalIncomeFiltered += txAmount;
+                        if (!incomeSummary[tx.category_name]) incomeSummary[tx.category_name] = 0;
+                        incomeSummary[tx.category_name] += txAmount;
                     }
                 } else if (tx.type === 'expense' && passOwnerFilter && passTypeFilter) {
                     if (!categorySummary[tx.category_name]) categorySummary[tx.category_name] = 0;
@@ -854,7 +891,7 @@ async function loadTransactions() {
         if (billSummaryTextEl) billSummaryTextEl.innerHTML = `รายจ่ายกองกลาง${monthLabel}รวม: <b>${formatBaht(grandSharedExpense)}</b> (คำนวณตามสัดส่วนจริง)<br><div class="text-center mt-2 small text-white-50" style="font-size: 0.8rem;">• ${nameMe} ควักจ่ายล่วงหน้า: ${totalMePaidShared.toLocaleString()} บ. | ${namePartner} ควักจ่ายล่วงหน้า: ${totalPartnerPaidShared.toLocaleString()} บ.</div><hr class="my-2 text-white-50"><div class="text-center">${settlementResultText}</div>`;
     }
     
-    renderAnalytics(categorySummary, totalExpenseFiltered, totalIncomeFiltered);
+    renderAnalytics(categorySummary, totalExpenseFiltered, totalIncomeFiltered, incomeSummary);
     renderMonthlyTrend(txs);
     renderSavingsTrend(txs);
     updateMilestones(txs);
