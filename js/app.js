@@ -339,9 +339,34 @@ function renderAnalytics(summary, total, totalIncome) {
             window.myCharts.categoryPieChart.destroy();
         }
         
-        const labels = sortedCats.map(x => x.name);
-        const data = sortedCats.map(x => x.amount);
-        const backgroundColors = sortedCats.map(x => getCategoryColor(x.name));
+        let labels = [];
+        let data = [];
+        let backgroundColors = [];
+        let tooltipCallback = null;
+
+        const incomeVal = totalIncome || 0;
+        if (incomeVal > 0) {
+            const remaining = Math.max(0, incomeVal - total);
+            labels = ['รายจ่ายทั้งหมด', 'เงินออมคงเหลือ'];
+            data = [total, remaining];
+            backgroundColors = ['#f87171', '#34d399']; // แดง = รายจ่าย, เขียว = คงเหลือ
+            
+            tooltipCallback = function(context) {
+                const val = context.raw || 0;
+                const pct = incomeVal > 0 ? ((val / incomeVal) * 100).toFixed(1) : 0;
+                return ` ${context.label}: ${val.toLocaleString('th-TH')} บาท (${pct}%)`;
+            };
+        } else {
+            labels = sortedCats.map(x => x.name);
+            data = sortedCats.map(x => x.amount);
+            backgroundColors = sortedCats.map(x => getCategoryColor(x.name));
+            
+            tooltipCallback = function(context) {
+                const val = context.raw || 0;
+                const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                return ` ${context.label}: ${val.toLocaleString('th-TH')} บาท (${pct}%)`;
+            };
+        }
         
         window.myCharts.categoryPieChart = new Chart(ctx, {
             type: 'doughnut',
@@ -361,11 +386,7 @@ function renderAnalytics(summary, total, totalIncome) {
                     legend: { display: false },
                     tooltip: {
                         callbacks: {
-                            label: function(context) {
-                                const val = context.raw || 0;
-                                const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
-                                return ` ${context.label}: ${val.toLocaleString('th-TH')} บาท (${pct}%)`;
-                            }
+                            label: tooltipCallback
                         }
                     }
                 },
