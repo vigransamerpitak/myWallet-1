@@ -1841,6 +1841,81 @@ async function saveSplitBill() {
     }
 }
 
+// === 📥 CSV Export (ระบบส่งออกข้อมูลรายงานเป็นไฟล์ CSV) ===
+
+function exportCSV() {
+    if (!filteredTxsCache || filteredTxsCache.length === 0) {
+        return showToast('ไม่มีข้อมูลรายการเงินที่จะส่งออก', '⚠️', true);
+    }
+
+    const headers = ['วันที่ (Date)', 'ประเภท (Type)', 'หมวดหมู่ (Category)', 'จำนวนเงิน (Amount)', 'กระเป๋าเงิน (Wallet)', 'บันทึกช่วยจำ (Note)', 'อารมณ์ (Emotion)'];
+    
+    // แปลงเจ้าของ (Owner) เป็นชื่อที่อ่านได้ง่ายขึ้น
+    const nameMe = localStorage.getItem('nameMe') || 'คุณโบ๊ท';
+    const namePartner = localStorage.getItem('namePartner') || 'คุณเอิร์น';
+    const emergencyTitle = localStorage.getItem('emergencyTargetTitle') || 'เงินออมสำรองฉุกเฉิน';
+
+    const getOwnerLabel = (owner) => {
+        if (owner === 'me') return nameMe;
+        if (owner === 'partner') return namePartner;
+        if (owner === 'emergency') return emergencyTitle;
+        if (owner === 'shared-me') return `กองกลาง (${nameMe} จ่าย)`;
+        if (owner === 'shared-partner') return `กองกลาง (${namePartner} จ่าย)`;
+        if (owner === 'shared') return 'กองกลาง';
+        return owner;
+    };
+
+    const getTypeLabel = (type) => {
+        if (type === 'income') return 'รายรับ';
+        if (type === 'expense') return 'รายจ่าย';
+        return type;
+    };
+
+    const rows = filteredTxsCache.map(item => {
+        const dateStr = item.txDate ? item.txDate.toLocaleDateString('th-TH') : '';
+        const typeStr = getTypeLabel(item.tx.type);
+        const categoryStr = item.tx.category_name || '';
+        const amountStr = item.txAmount ? item.txAmount.toFixed(2) : '0.00';
+        const ownerStr = getOwnerLabel(item.exactOwner);
+        const noteStr = item.cleanNote || '';
+        const emotionStr = item.emotion || '';
+
+        // ทำการ escape ฟิลด์ที่มี comma หรือ double quotes เพื่อป้องกัน CSV เสียรูป
+        const escapeField = (str) => {
+            const escaped = String(str).replace(/"/g, '""');
+            return `"${escaped}"`;
+        };
+
+        return [
+            escapeField(dateStr),
+            escapeField(typeStr),
+            escapeField(categoryStr),
+            escapeField(amountStr),
+            escapeField(ownerStr),
+            escapeField(noteStr),
+            escapeField(emotionStr)
+        ].join(',');
+    });
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    
+    // ตั้งชื่อไฟล์ CSV เช่น wallet_report_2026-06-27.csv
+    const now = new Date();
+    const formattedDate = now.toISOString().slice(0, 10);
+    link.setAttribute('download', `wallet_report_${formattedDate}.csv`);
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showToast('ดาวน์โหลดรายงาน CSV สำเร็จแล้วครับ!', '📥');
+}
+
 // === 📄 PDF Report Generation (ระบบแปลงและส่งพิมพ์รายงานเป็น PDF) ===
 
 function generateMonthlyReportPDF() {
