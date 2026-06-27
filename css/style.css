@@ -44,51 +44,59 @@ body {
 }
 
 .balance-card {
-    border: 1px solid var(--card-border) !important;
+    border: none !important;
     border-radius: 20px !important;
     padding: 1.25rem 1.25rem !important;
     transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
-    position: relative;
-    overflow: hidden;
     box-shadow: 0 4px 20px rgba(15, 23, 42, 0.02) !important;
-}
-
-.balance-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: 5px;
-    border-radius: 5px 0 0 5px;
 }
 
 .balance-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 10px 24px rgba(99, 102, 241, 0.08) !important;
-    border-color: rgba(99, 102, 241, 0.2) !important;
+    box-shadow: 0 12px 20px rgba(148, 163, 184, 0.08) !important;
 }
 
-/* Light mode & Dark mode wallet card resets */
-.bg-my-wallet, .bg-partner-wallet, .bg-shared-wallet, .bg-emergency-wallet,
-[data-theme="dark"] .bg-my-wallet, [data-theme="dark"] .bg-partner-wallet,
-[data-theme="dark"] .bg-shared-wallet, [data-theme="dark"] .bg-emergency-wallet {
-    background-color: var(--card-bg) !important;
-    color: var(--color-text) !important;
-    border: 1px solid var(--card-border) !important;
+/* Light mode wallets */
+.bg-my-wallet {
+    background-color: #eff6ff !important;
+    color: #1e6091 !important;
 }
 
-.bg-my-wallet::before {
-    background-color: #6366f1 !important; /* Indigo */
+.bg-partner-wallet {
+    background-color: #fff1f2 !important;
+    color: #e11d48 !important;
 }
-.bg-partner-wallet::before {
-    background-color: #ec4899 !important; /* Pink */
+
+.bg-shared-wallet {
+    background-color: #fef9c3 !important;
+    color: #854d0e !important;
 }
-.bg-shared-wallet::before {
-    background-color: #f59e0b !important; /* Amber */
+
+.bg-emergency-wallet {
+    background-color: #ecfdf5 !important;
+    color: #065f46 !important;
+    border: 1px solid rgba(16, 185, 129, 0.2) !important;
 }
-.bg-emergency-wallet::before {
-    background-color: #10b981 !important; /* Emerald */
+
+/* Dark mode wallets overrides */
+[data-theme="dark"] .bg-my-wallet {
+    background-color: #1e3a8a !important;
+    color: #93c5fd !important;
+}
+
+[data-theme="dark"] .bg-partner-wallet {
+    background-color: #881337 !important;
+    color: #fca5a5 !important;
+}
+
+[data-theme="dark"] .bg-shared-wallet {
+    background-color: #713f12 !important;
+    color: #fde047 !important;
+}
+
+[data-theme="dark"] .bg-emergency-wallet {
+    background-color: #064e3b !important;
+    color: #6ee7b7 !important;
 }
 
 .form-control,

@@ -110,32 +110,32 @@ function playSynthSound(type) {
  * @returns {string} โครงสร้าง HTML ของไอคอนพร้อมชื่อหมวดหมู่
  */
 function getCategoryIconHtml(name) {
-    if (!name) return '<i class="bi bi-box text-indigo me-1.5"></i> อื่นๆ';
+    if (!name) return '<i class="bi bi-box text-indigo me-2"></i> อื่นๆ';
     const clean = name.trim();
     const mapping = {
-        'อาหาร': '<i class="bi bi-egg-fried text-indigo me-1.5"></i> อาหาร',
-        'เครื่องดื่ม': '<i class="bi bi-cup-hot text-indigo me-1.5"></i> เครื่องดื่ม',
-        'ช้อปปิ้ง': '<i class="bi bi-bag text-indigo me-1.5"></i> ช้อปปิ้ง',
-        'ชอปปิ้ง': '<i class="bi bi-bag text-indigo me-1.5"></i> ช้อปปิ้ง',
-        'เดินทาง': '<i class="bi bi-car-front text-indigo me-1.5"></i> เดินทาง',
-        'ค่าเดินทาง': '<i class="bi bi-car-front text-indigo me-1.5"></i> ค่าเดินทาง',
-        'ค่าบ้าน': '<i class="bi bi-house text-indigo me-1.5"></i> ค่าบ้าน/ที่พัก',
-        'ค่าที่พัก/บ้าน': '<i class="bi bi-house text-indigo me-1.5"></i> ค่าบ้าน/ที่พัก',
-        'ค่าน้ำค่าไฟ': '<i class="bi bi-lightning-charge text-indigo me-1.5"></i> ค่าน้ำค่าไฟ',
-        'ความบันเทิง': '<i class="bi bi-film text-indigo me-1.5"></i> ความบันเทิง',
-        'สุขภาพ': '<i class="bi bi-heart-pulse text-indigo me-1.5"></i> สุขภาพ',
-        'ของใช้ส่วนตัว': '<i class="bi bi-stars text-indigo me-1.5"></i> ของใช้ส่วนตัว',
-        'ลงทุน': '<i class="bi bi-graph-up-arrow text-indigo me-1.5"></i> ออม/ลงทุน',
-        'เงินเดือน': '<i class="bi bi-cash-stack text-success me-1.5"></i> เงินเดือน',
-        'โบนัส': '<i class="bi bi-gift text-success me-1.5"></i> โบนัส',
-        'สลิปรอระบุหมวดหมู่': '<i class="bi bi-hourglass-split text-warning me-1.5"></i> รอระบุหมวดหมู่',
-        'ทั่วไป': '<i class="bi bi-bookmark text-indigo me-1.5"></i> ทั่วไป',
-        'ท่องเที่ยว': '<i class="bi bi-airplane text-indigo me-1.5"></i> ท่องเที่ยว',
-        'ค่าโทรศัพท์/เน็ต': '<i class="bi bi-phone text-indigo me-1.5"></i> โทรศัพท์/เน็ต',
-        'ของใช้ในบ้าน': '<i class="bi bi-brush text-indigo me-1.5"></i> ของใช้ในบ้าน',
-        'ของขวัญ': '<i class="bi bi-gift text-indigo me-1.5"></i> ของขวัญ',
-        'การศึกษา': '<i class="bi bi-book text-indigo me-1.5"></i> การศึกษา',
-        'อื่นๆ': '<i class="bi bi-box text-indigo me-1.5"></i> อื่นๆ'
+        'อาหาร': '<i class="bi bi-egg-fried text-indigo me-2"></i> อาหาร',
+        'เครื่องดื่ม': '<i class="bi bi-cup-hot text-indigo me-2"></i> เครื่องดื่ม',
+        'ช้อปปิ้ง': '<i class="bi bi-bag text-indigo me-2"></i> ช้อปปิ้ง',
+        'ชอปปิ้ง': '<i class="bi bi-bag text-indigo me-2"></i> ช้อปปิ้ง',
+        'เดินทาง': '<i class="bi bi-car-front text-indigo me-2"></i> เดินทาง',
+        'ค่าเดินทาง': '<i class="bi bi-car-front text-indigo me-2"></i> ค่าเดินทาง',
+        'ค่าบ้าน': '<i class="bi bi-house text-indigo me-2"></i> ค่าบ้าน/ที่พัก',
+        'ค่าที่พัก/บ้าน': '<i class="bi bi-house text-indigo me-2"></i> ค่าบ้าน/ที่พัก',
+        'ค่าน้ำค่าไฟ': '<i class="bi bi-lightning-charge text-indigo me-2"></i> ค่าน้ำค่าไฟ',
+        'ความบันเทิง': '<i class="bi bi-film text-indigo me-2"></i> ความบันเทิง',
+        'สุขภาพ': '<i class="bi bi-heart-pulse text-indigo me-2"></i> สุขภาพ',
+        'ของใช้ส่วนตัว': '<i class="bi bi-stars text-indigo me-2"></i> ของใช้ส่วนตัว',
+        'ลงทุน': '<i class="bi bi-graph-up-arrow text-indigo me-2"></i> ออม/ลงทุน',
+        'เงินเดือน': '<i class="bi bi-cash-stack text-success me-2"></i> เงินเดือน',
+        'โบนัส': '<i class="bi bi-gift text-success me-2"></i> โบนัส',
+        'สลิปรอระบุหมวดหมู่': '<i class="bi bi-hourglass-split text-warning me-2"></i> รอระบุหมวดหมู่',
+        'ทั่วไป': '<i class="bi bi-bookmark text-indigo me-2"></i> ทั่วไป',
+        'ท่องเที่ยว': '<i class="bi bi-airplane text-indigo me-2"></i> ท่องเที่ยว',
+        'ค่าโทรศัพท์/เน็ต': '<i class="bi bi-phone text-indigo me-2"></i> โทรศัพท์/เน็ต',
+        'ของใช้ในบ้าน': '<i class="bi bi-brush text-indigo me-2"></i> ของใช้ในบ้าน',
+        'ของขวัญ': '<i class="bi bi-gift text-indigo me-2"></i> ของขวัญ',
+        'การศึกษา': '<i class="bi bi-book text-indigo me-2"></i> การศึกษา',
+        'อื่นๆ': '<i class="bi bi-box text-indigo me-2"></i> อื่นๆ'
     };
-    return mapping[clean] || `<i class="bi bi-tag text-indigo me-1.5"></i> ${clean}`;
+    return mapping[clean] || `<i class="bi bi-tag text-indigo me-2"></i> ${clean}`;
 }

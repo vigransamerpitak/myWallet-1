@@ -83,7 +83,7 @@ function syncEmergencyLabels() {
     const saved = localStorage.getItem('emergencyTargetTitle') || 'เงินออมสำรองฉุกเฉิน';
 
     const labelWalletEmergency = document.getElementById('labelWalletEmergency');
-    if (labelWalletEmergency) labelWalletEmergency.innerHTML = `<i class="bi bi-shield-fill-check text-success me-1.5"></i> ${saved}`;
+    if (labelWalletEmergency) labelWalletEmergency.innerHTML = `<i class="bi bi-shield-fill-check text-success me-2"></i> ${saved}`;
 
     const optOwnerEmergency = document.getElementById('optOwnerEmergency');
     if (optOwnerEmergency) optOwnerEmergency.innerText = `🛡️ บัญชีออม (${saved})`;
@@ -819,7 +819,7 @@ async function loadTransactions() {
             <td class="small text-muted">${dateStr}</td>
             <td>${ownerBadge}</td>
             <td class="fw-medium ${tx.type === 'expense' ? 'text-danger' : 'text-success'}">
-                <i class="bi ${tx.type === 'expense' ? 'bi-arrow-down-right-circle-fill text-danger' : 'bi-arrow-up-right-circle-fill text-success'} me-1.5"></i>
+                <i class="bi ${tx.type === 'expense' ? 'bi-arrow-down-right-circle-fill text-danger' : 'bi-arrow-up-right-circle-fill text-success'} me-2"></i>
                 ${tx.type === 'expense' ? 'รายจ่าย' : 'รายรับ'}
             </td>
             <td class="fw-medium">
@@ -831,7 +831,7 @@ async function loadTransactions() {
                 ${displayNoteText || '-'}
             </td>
             <td class="text-center whitespace-nowrap">
-                <button onclick="enterEditMode(${tx.id}, ${txAmount}, '${safeNote}', '${safeOwner}', '${safeCategory}')" class="btn btn-icon btn-edit cursor-pointer me-1.5" title="แก้ไขรายการ">
+                <button onclick="enterEditMode(${tx.id}, ${txAmount}, '${safeNote}', '${safeOwner}', '${safeCategory}')" class="btn btn-icon btn-edit cursor-pointer me-2" title="แก้ไขรายการ">
                     <i class="bi bi-pencil-fill"></i>
                 </button>
                 <button onclick="deleteTransaction(${tx.id})" data-delete-id="${tx.id}" class="btn btn-icon btn-delete cursor-pointer" title="ลบรายการ">

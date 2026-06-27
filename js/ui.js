@@ -246,10 +246,10 @@ function applyDynamicNames() {
     
     // การ์ดแสดงผลบน Dashboard
     const labelWalletMe = document.getElementById('labelWalletMe');
-    if (labelWalletMe) labelWalletMe.innerHTML = `<i class="bi bi-person text-indigo me-1.5"></i> กระเป๋า${nameMe}`;
+    if (labelWalletMe) labelWalletMe.innerHTML = `<i class="bi bi-person text-indigo me-2"></i> กระเป๋า${nameMe}`;
     
     const labelWalletPartner = document.getElementById('labelWalletPartner');
-    if (labelWalletPartner) labelWalletPartner.innerHTML = `<i class="bi bi-person text-pink me-1.5"></i> กระเป๋า${namePartner}`;
+    if (labelWalletPartner) labelWalletPartner.innerHTML = `<i class="bi bi-person text-pink me-2"></i> กระเป๋า${namePartner}`;
     
     // ดรอปดาวน์ในฟอร์มจดบันทึก
     const optOwnerMe = document.getElementById('optOwnerMe');
@@ -275,9 +275,9 @@ function applyDynamicNames() {
     const userDisplay = document.getElementById('userDisplay');
     if (userDisplay) {
         if (window.currentUserRole === 'me') {
-            userDisplay.innerHTML = `<i class="bi bi-person-circle text-indigo me-1.5"></i> ผู้ใช้ปัจจุบัน: <span class="fw-bold">${nameMe}</span>`;
+            userDisplay.innerHTML = `<i class="bi bi-person-circle text-indigo me-2"></i> ผู้ใช้ปัจจุบัน: <span class="fw-bold">${nameMe}</span>`;
         } else {
-            userDisplay.innerHTML = `<i class="bi bi-person-circle text-pink me-1.5"></i> ผู้ใช้ปัจจุบัน: <span class="fw-bold">${namePartner}</span>`;
+            userDisplay.innerHTML = `<i class="bi bi-person-circle text-pink me-2"></i> ผู้ใช้ปัจจุบัน: <span class="fw-bold">${namePartner}</span>`;
         }
     }
 
