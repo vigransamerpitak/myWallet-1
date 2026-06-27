@@ -862,7 +862,7 @@ async function saveSharedJarSetup() {
     const now = new Date();
     const targetMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
-    const existing = (loadedGoalsCache || []).find(g => g && (g.type === 'save_couple' || g.title.startsWith('[save_couple]')));
+    const existing = (loadedGoalsCache || []).find(g => g && g.title && g.title.startsWith('[save_couple]'));
 
     try {
         if (existing) {
@@ -881,7 +881,7 @@ async function saveSharedJarSetup() {
                 .insert([{
                     title: fullTitle,
                     amount: target,
-                    type: 'save_couple',
+                    type: 'save',
                     goal_month: targetMonthStr,
                     is_completed: false,
                     is_failed: false
@@ -909,7 +909,7 @@ function renderCoupleJar() {
     const depositAreaEl = document.getElementById('coupleJarDepositArea');
     if (!titleTextEl || !progressTextEl || !liquidEl || !depositAreaEl) return;
 
-    const goal = (loadedGoalsCache || []).find(g => g && (g.type === 'save_couple' || g.title.startsWith('[save_couple]')));
+    const goal = (loadedGoalsCache || []).find(g => g && g.title && g.title.startsWith('[save_couple]'));
 
     if (!goal) {
         titleTextEl.innerText = "ยังไม่มีการตั้งเป้าหมายออมคู่";
@@ -960,7 +960,7 @@ async function depositToCoupleJar() {
         return showToast('กรุณากรอกจำนวนเงินฝากให้ถูกต้องครับ', '⚠️', true);
     }
 
-    const goal = (loadedGoalsCache || []).find(g => g && (g.type === 'save_couple' || g.title.startsWith('[save_couple]')));
+    const goal = (loadedGoalsCache || []).find(g => g && g.title && g.title.startsWith('[save_couple]'));
     if (!goal) {
         return showToast('กรุณาตั้งค่าเป้าหมายกระปุกก่อนหยอดเงินครับ', '⚠️', true);
     }
