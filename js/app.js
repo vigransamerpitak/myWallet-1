@@ -277,7 +277,7 @@ function renderAnalytics(summary, total) {
         col.innerHTML = `
             <div class="bg-light p-2 px-3 rounded-3 border mb-2">
                 <div class="d-flex justify-content-between small fw-bold mb-1">
-                    <span class="text-dark">${item.name === 'สลิปรอระบุหมวดหมู่' ? '⏳ รอระบุหมวดหมู่' : (typeof getCategoryEmoji === 'function' ? getCategoryEmoji(item.name) : '') + ' ' + item.name}</span>
+                    <span class="text-dark">${item.name === 'สลิปรอระบุหมวดหมู่' ? '⏳ รอระบุหมวดหมู่' : (typeof getCategoryEmoji === 'function' ? getCategoryEmoji(item.name) : item.name)}</span>
                     <span class="text-secondary">${formatBaht(item.amount)} (${percentage}%)</span>
                 </div>
                 <div class="progress" style="height: 6px;">
