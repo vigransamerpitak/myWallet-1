@@ -6,7 +6,7 @@ let filterType = 'all';
 let filterDate = 'this-month';
 var currentUserRole = window.currentUserRole || 'me';
 
-window.initUserIdentity = function(userId) {
+window.initUserIdentity = function (userId) {
     const boatId = '4ffee1dd-ff34-47c0-a623-7dcc76d80c0f';
     if (userId === boatId) {
         currentUserRole = 'me';
@@ -81,13 +81,13 @@ function updateEmergencyTargetTitle(val) {
 
 function syncEmergencyLabels() {
     const saved = localStorage.getItem('emergencyTargetTitle') || 'เงินออมสำรองฉุกเฉิน';
-    
+
     const labelWalletEmergency = document.getElementById('labelWalletEmergency');
     if (labelWalletEmergency) labelWalletEmergency.innerText = `${saved} 🎯`;
-    
+
     const optOwnerEmergency = document.getElementById('optOwnerEmergency');
     if (optOwnerEmergency) optOwnerEmergency.innerText = `🚨 บัญชีออม (${saved})`;
-    
+
     const filterEmergency = document.getElementById('filterEmergency');
     if (filterEmergency) filterEmergency.innerText = `🎯 เฉพาะ${saved}`;
 
@@ -146,7 +146,7 @@ function renderMonthlyTrend(allTxs) {
     const monthlyData = months.map(m => ({ ...m, income: 0, expense: 0 }));
     allTxs.forEach(tx => {
         const note = tx.note || '';
-        const isInternalTransfer = 
+        const isInternalTransfer =
             tx.owner === 'emergency' ||
             note.includes('[โอนเข้าออมฉุกเฉิน]') ||
             note.includes('[ถอนจากออมฉุกเฉิน]') ||
@@ -156,7 +156,7 @@ function renderMonthlyTrend(allTxs) {
             note.includes('[ออมเพื่อ:');
 
         if (isInternalTransfer) return; // ข้ามยอดเงินโอนออมภายใน
-        
+
         const txDate = new Date(tx.created_at);
         const txAmount = parseFloat(tx.amount);
         const idx = monthlyData.findIndex(m => m.year === txDate.getFullYear() && m.month === txDate.getMonth());
@@ -212,7 +212,7 @@ function renderMonthlyTrend(allTxs) {
                 },
                 tooltip: {
                     callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                             return ` ${context.dataset.label}: ${context.raw.toLocaleString('th-TH')} บาท`;
                         }
                     }
@@ -254,7 +254,7 @@ function renderAnalytics(summary, total, totalIncome, incomeSummary) {
     const area = document.getElementById('analyticsArea');
     if (!area) return;
     area.innerHTML = '';
-    
+
     // แสดงสัดส่วนรายรับ-รายจ่ายเทียบในเดือนนี้
     const compArea = document.getElementById('analyticsComparisonArea');
     if (compArea) {
@@ -263,7 +263,7 @@ function renderAnalytics(summary, total, totalIncome, incomeSummary) {
         if (incomeVal > 0) {
             const ratio = ((total / incomeVal) * 100).toFixed(1);
             const isOverHalf = parseFloat(ratio) > 50;
-            
+
             if (isOverHalf) {
                 compArea.innerHTML = `
                     <div class="p-3 bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded-4 text-center">
@@ -301,10 +301,10 @@ function renderAnalytics(summary, total, totalIncome, incomeSummary) {
 
     const sortedCats = Object.keys(summary).map(name => ({ name: name, amount: summary[name] })).sort((a, b) => b.amount - a.amount);
     const sortedIncomes = incomeSummary ? Object.keys(incomeSummary).map(name => ({ name: name, amount: incomeSummary[name] })).sort((a, b) => b.amount - a.amount) : [];
-    
+
     const chartContainer = document.getElementById('categoryChartContainer');
     const wrapper = document.getElementById('analyticsWrapper');
-    
+
     if (sortedCats.length === 0 && sortedIncomes.length === 0) {
         if (chartContainer) chartContainer.classList.add('d-none');
         if (wrapper) {
@@ -329,7 +329,7 @@ function renderAnalytics(summary, total, totalIncome, incomeSummary) {
         if (window.myCharts.categoryPieChart) {
             window.myCharts.categoryPieChart.destroy();
         }
-        
+
         let labels = [];
         let data = [];
         let backgroundColors = [];
@@ -338,11 +338,11 @@ function renderAnalytics(summary, total, totalIncome, incomeSummary) {
         const incomeVal = totalIncome || 0;
         if (incomeVal > 0) {
             const remaining = Math.max(0, incomeVal - total);
-            labels = ['รายจ่ายทั้งหมด', 'เงินออมคงเหลือ'];
+            labels = ['รายจ่ายทั้งหมด', 'รายรับทั้งหมด'];
             data = [total, remaining];
             backgroundColors = ['#f87171', '#34d399']; // แดง = รายจ่าย, เขียว = คงเหลือ
-            
-            tooltipCallback = function(context) {
+
+            tooltipCallback = function (context) {
                 const val = context.raw || 0;
                 const pct = incomeVal > 0 ? ((val / incomeVal) * 100).toFixed(1) : 0;
                 return ` ${context.label}: ${val.toLocaleString('th-TH')} บาท (${pct}%)`;
@@ -351,14 +351,14 @@ function renderAnalytics(summary, total, totalIncome, incomeSummary) {
             labels = sortedCats.map(x => x.name);
             data = sortedCats.map(x => x.amount);
             backgroundColors = sortedCats.map(x => getCategoryColor(x.name));
-            
-            tooltipCallback = function(context) {
+
+            tooltipCallback = function (context) {
                 const val = context.raw || 0;
                 const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
                 return ` ${context.label}: ${val.toLocaleString('th-TH')} บาท (${pct}%)`;
             };
         }
-        
+
         window.myCharts.categoryPieChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
@@ -415,9 +415,9 @@ function renderSavingsTrend(allTxs) {
     const months = [];
     for (let i = 5; i >= 0; i--) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        months.push({ 
-            year: d.getFullYear(), 
-            month: d.getMonth(), 
+        months.push({
+            year: d.getFullYear(),
+            month: d.getMonth(),
             label: `${d.toLocaleString('th-TH', { month: 'short' })} ${d.getFullYear() + 543}`,
             endTimestamp: new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999).getTime()
         });
@@ -475,7 +475,7 @@ function renderSavingsTrend(allTxs) {
                 legend: { display: false },
                 tooltip: {
                     callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                             return ` ยอดเงินสะสม: ${context.raw.toLocaleString('th-TH')} บาท`;
                         }
                     }
@@ -554,19 +554,19 @@ function renderPaginationControls(totalPages) {
     if (totalPages <= 1) return;
 
     let html = `<ul class="pagination pagination-sm mb-0 justify-content-center">`;
-    
+
     // ปุ่มย้อนกลับ
     html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}"><a class="page-link cursor-pointer" onclick="changePage(${currentPage - 1})">ก่อนหน้า</a></li>`;
-    
+
     // หมายเลขหน้า
     for (let i = 1; i <= totalPages; i++) {
         html += `<li class="page-item ${currentPage === i ? 'active' : ''}"><a class="page-link cursor-pointer" onclick="changePage(${i})">${i}</a></li>`;
     }
-    
+
     // ปุ่มถัดไป
     html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}"><a class="page-link cursor-pointer" onclick="changePage(${currentPage + 1})">ถัดไป</a></li>`;
     html += `</ul>`;
-    
+
     nav.innerHTML = html;
 }
 
@@ -598,11 +598,11 @@ async function loadTransactions() {
         }
         tbody.innerHTML = shimmerRows;
     }
-    
+
     // สเกลเลตันโหลดส่วนอื่น ๆ สไตล์ Facebook
     if (typeof renderJarsLoadingSkeleton === 'function') renderJarsLoadingSkeleton();
     if (typeof renderAIInsightsLoadingSkeleton === 'function') renderAIInsightsLoadingSkeleton();
-    
+
     const billTextEl = document.getElementById('billSummaryText');
     if (billTextEl) {
         billTextEl.innerHTML = `
@@ -654,7 +654,7 @@ async function loadTransactions() {
     txs.forEach(tx => {
         const txDate = new Date(tx.created_at); const txAmount = parseFloat(tx.amount); const value = tx.type === 'income' ? txAmount : -txAmount;
         let exactOwner = tx.owner; let cleanNote = tx.note || '';
-        
+
         // 🫂 ตรวจจับข้อความแชร์อ้อมกอดออโต้
         if (cleanNote.startsWith('[SYSTEM_HUG]')) {
             handleReceivedHug(tx);
@@ -723,7 +723,7 @@ async function loadTransactions() {
 
         if (isCurrentFilterMonth) {
             const note = tx.note || '';
-            const isInternalTransfer = 
+            const isInternalTransfer =
                 exactOwner === 'emergency' ||
                 note.includes('[โอนเข้าออมฉุกเฉิน]') ||
                 note.includes('[ถอนจากออมฉุกเฉิน]') ||
@@ -801,7 +801,7 @@ async function loadTransactions() {
         const safeOwner = escapeForAttr(tx.owner);
         const safeCategory = escapeForAttr(tx.category_name || 'ทั่วไป');
         const dateStr = txDate.toLocaleString('th-TH', { hour12: false });
-        
+
         const row = document.createElement('tr');
         row.innerHTML = `
             <td class="small text-muted">${dateStr}</td>
@@ -853,7 +853,7 @@ async function loadTransactions() {
 
         if (billSummaryTextEl) billSummaryTextEl.innerHTML = `รายจ่ายกองกลาง${monthLabel}รวม: <b>${formatBaht(grandSharedExpense)}</b> (คำนวณตามสัดส่วนจริง)<br><div class="text-center mt-2 small text-white-50" style="font-size: 0.8rem;">• ${nameMe} ควักจ่ายล่วงหน้า: ${totalMePaidShared.toLocaleString()} บ. | ${namePartner} ควักจ่ายล่วงหน้า: ${totalPartnerPaidShared.toLocaleString()} บ.</div><hr class="my-2 text-white-50"><div class="text-center">${settlementResultText}</div>`;
     }
-    
+
     renderAnalytics(categorySummary, totalExpenseFiltered, totalIncomeFiltered, incomeSummary);
     renderMonthlyTrend(txs);
     renderSavingsTrend(txs);
@@ -962,7 +962,7 @@ async function saveTransaction(categoryName, type) {
                 const nameMe = localStorage.getItem('nameMe') || 'คุณโบ๊ท';
                 const namePartner = localStorage.getItem('namePartner') || 'คุณเอิร์น';
                 const ownerName = dbOwner === 'me' ? nameMe : namePartner;
-                
+
                 // หักจ่ายส่วนตัว
                 const deductNote = `[หักออมอัตโนมัติ ${pct}%] ส่งเข้าบัญชีออมฉุกเฉิน`;
                 await supabaseClient.from('transactions').insert([{
@@ -984,7 +984,7 @@ async function saveTransaction(categoryName, type) {
                     owner: 'emergency',
                     created_at: new Date().toISOString()
                 }]);
-                
+
                 showToast(`หักออมอัตโนมัติ ${pct}% (${autoSaveAmt.toLocaleString()} บ.) เข้าคลังเรียบร้อย! 🎯`, '🎯');
             }
         }
@@ -1066,7 +1066,7 @@ function enterEditMode(id, amount, note, originalOwner, originalCategory) {
 
     const editCategoryArea = document.getElementById('editCategoryArea');
     if (editCategoryArea) editCategoryArea.classList.remove('d-none');
-    
+
     const txCategorySelect = document.getElementById('txCategory');
     if (txCategorySelect) txCategorySelect.value = originalCategory || 'ทั่วไป';
 
@@ -1086,7 +1086,7 @@ function cancelEditMode() {
         document.getElementById('emergencyPurposeArea').classList.add('d-none');
     }
     document.getElementById('txOwner').value = currentUserRole === 'me' ? 'me' : 'partner';
-    
+
     const editCategoryArea = document.getElementById('editCategoryArea');
     if (editCategoryArea) editCategoryArea.classList.add('d-none');
 
@@ -1151,7 +1151,7 @@ async function submitEditTransaction() {
 
     const txCategorySelect = document.getElementById('txCategory');
     let finalCategory = txCategorySelect ? txCategorySelect.value : (currentTx ? currentTx.category_name : 'ทั่วไป');
-    
+
     if (dbOwner === 'emergency') {
         finalCategory = 'ลงทุน';
     }
@@ -1189,7 +1189,7 @@ async function submitEditTransaction() {
                 let tag = oldNote.includes('[โอนเข้าออมฉุกเฉิน]') ? '[โอนเข้าออมฉุกเฉิน]' : '[ถอนจากออมฉุกเฉิน]';
                 let cleanNewNote = finalNote.replace(/\[โอนเข้าออมฉุกเฉิน\]\s*/, '').replace(/\[ถอนจากออมฉุกเฉิน\]\s*/, '');
                 let newNoteWithTag = cleanNewNote ? `${tag} ${cleanNewNote}` : tag;
-                
+
                 await supabaseClient.from('transactions').update({ amount: finalAmount, note: newNoteWithTag }).eq('note', oldNote).eq('amount', oldAmount).neq('id', id);
             }
         } else if (oldNote && (oldNote.startsWith('[หักเงินออมภารกิจ] ') || oldNote.startsWith('ภารกิจสำเร็จ: '))) {
@@ -1199,14 +1199,14 @@ async function submitEditTransaction() {
                 const newTitle = finalNote.startsWith('[หักเงินออมภารกิจ] ') ? finalNote.substring('[หักเงินออมภารกิจ] '.length) : finalNote;
                 const counterpartOldNote = `ภารกิจสำเร็จ: ${oldTitle}`;
                 const counterpartNewNote = `ภารกิจสำเร็จ: ${newTitle}`;
-                
+
                 await supabaseClient.from('transactions').update({ amount: finalAmount, note: counterpartNewNote }).eq('note', counterpartOldNote).eq('amount', oldAmount).neq('id', id);
             } else if (oldNote.startsWith('ภารกิจสำเร็จ: ')) {
                 const oldTitle = oldNote.substring('ภารกิจสำเร็จ: '.length);
                 const newTitle = finalNote.startsWith('ภารกิจสำเร็จ: ') ? finalNote.substring('ภารกิจสำเร็จ: '.length) : finalNote;
                 const counterpartOldNote = `[หักเงินออมภารกิจ] ${oldTitle}`;
                 const counterpartNewNote = `[หักเงินออมภารกิจ] ${newTitle}`;
-                
+
                 await supabaseClient.from('transactions').update({ amount: finalAmount, note: counterpartNewNote }).eq('note', counterpartOldNote).eq('amount', oldAmount).neq('id', id);
             }
         } else if (oldNote && (oldNote.startsWith('[หักออมอัตโนมัติ ') || oldNote.startsWith('เงินออมอัตโนมัติ '))) {
@@ -1216,7 +1216,7 @@ async function submitEditTransaction() {
                 const pct = matchOldDeduct[1];
                 const matchNewDeduct = finalNote.match(/^\[หักออมอัตโนมัติ\s*(\d+)%\]\s*ส่งเข้าบัญชีออมฉุกเฉิน/);
                 const newPct = matchNewDeduct ? matchNewDeduct[1] : pct;
-                
+
                 const { data: pairedTxs } = await supabaseClient.from('transactions').select('id, note').eq('amount', oldAmount).neq('id', id);
                 if (pairedTxs) {
                     const counterpart = pairedTxs.find(tx => tx.note && tx.note.startsWith(`เงินออมอัตโนมัติ ${pct}% จากรายรับของ`));
@@ -1228,16 +1228,16 @@ async function submitEditTransaction() {
                     }
                 }
             }
-            
+
             const matchOldAdd = oldNote.match(/^เงินออมอัตโนมัติ\s*(\d+)%\s*จากรายรับของ/);
             if (matchOldAdd) {
                 const pct = matchOldAdd[1];
                 const matchNewAdd = finalNote.match(/^เงินออมอัตโนมัติ\s*(\d+)%\s*จากรายรับของ/);
                 const newPct = matchNewAdd ? matchNewAdd[1] : pct;
-                
+
                 const counterpartOldNote = `[หักออมอัตโนมัติ ${pct}%] ส่งเข้าบัญชีออมฉุกเฉิน`;
                 const counterpartNewNote = `[หักออมอัตโนมัติ ${newPct}%] ส่งเข้าบัญชีออมฉุกเฉิน`;
-                
+
                 await supabaseClient.from('transactions').update({ amount: finalAmount, note: counterpartNewNote }).eq('note', counterpartOldNote).eq('amount', oldAmount).neq('id', id);
             }
         } else {
@@ -1276,12 +1276,12 @@ async function deleteTransaction(id) {
             const match = currentTx.note.match(/\[SLIP_URL:(.*?)\]/);
             if (match && match[1]) await supabaseClient.storage.from('slips').remove([match[1]]);
         }
-        
+
         // 1. ลบคู่โอนฉุกเฉิน
         if (currentTx.note && (currentTx.note.includes('[โอนเข้าออมฉุกเฉิน]') || currentTx.note.includes('[ถอนจากออมฉุกเฉิน]'))) {
             await supabaseClient.from('transactions').delete().eq('note', currentTx.note).eq('amount', currentTx.amount);
         }
-        
+
         // 2. ลบคู่โอนภารกิจการเงิน
         if (currentTx.note) {
             if (currentTx.note.startsWith('[หักเงินออมภารกิจ] ')) {
@@ -1307,7 +1307,7 @@ async function deleteTransaction(id) {
                     }
                 }
             }
-            
+
             const matchAdd = currentTx.note.match(/^เงินออมอัตโนมัติ\s*(\d+)%\s*จากรายรับของ/);
             if (matchAdd) {
                 const pct = matchAdd[1];
@@ -1332,14 +1332,14 @@ async function createNewGoalFrontend() {
     const title = titleInput.value.trim(); const amount = parseFloat(amountInput.value);
     if (!title || isNaN(amount) || amount <= 0) return showToast('กรุณากรอกชื่อเควสและยอดเงินตั้งเป้าหมายให้ถูกต้องครับ', '⚠️', true);
     const now = new Date(); const targetMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    
+
     let dbType = typeInput.value;
     let dbTitle = title;
     if (dbType.startsWith('save_')) {
         dbTitle = `[${dbType}] ${title}`;
         dbType = 'save';
     }
-    
+
     const { error } = await supabaseClient.from('goals').insert([{ title: dbTitle, amount: amount, type: dbType, goal_month: targetMonthStr, is_completed: false, is_failed: false }]);
     if (error) {
         showToast(`เพิ่มภารกิจล้มเหลว: ${error.message}`, '❌', true);
@@ -1365,16 +1365,16 @@ async function loadGoals() {
     }
     const now = new Date(); let targetMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     if (filterDate === 'last-month') { let prevMonth = now.getMonth() - 1; let prevYear = now.getFullYear(); if (prevMonth < 0) { prevMonth = 11; prevYear--; } targetMonthStr = `${prevYear}-${String(prevMonth + 1).padStart(2, '0')}`; }
-    
+
     const checklistLabel = document.getElementById('checklistMonthLabel');
     if (checklistLabel) checklistLabel.innerText = filterDate === 'all' ? 'ทุกช่วงเวลา' : `ประจำเดือน ${targetMonthStr}`;
-    
+
     let query = supabaseClient.from('goals').select('*');
     if (filterDate !== 'all') { query = query.eq('goal_month', targetMonthStr); }
-    
+
     let { data: goals, error } = await query.order('id', { ascending: true });
     if (error) return console.error(error);
-    
+
     // ตั้งค่าบิลเริ่มต้นหากรอบเดือนใหม่ยังว่าง
     if (goals.length === 0 && filterDate !== 'all') {
         const flagKey = `defaultGoalsCreated_${targetMonthStr}`;
@@ -1386,14 +1386,14 @@ async function loadGoals() {
                 { title: 'หยอดกระปุกสำรองฉุกเฉินเพิ่ม', amount: 1000, type: 'save', goal_month: targetMonthStr }
             ];
             const { data: insertedData, error: insertError } = await supabaseClient.from('goals').insert(defaultGoals).select();
-            if (!insertError) { 
-                goals = insertedData; 
+            if (!insertError) {
+                goals = insertedData;
                 localStorage.setItem(flagKey, 'true');
-                showToast(`สร้าง Checklist เดือน ${targetMonthStr} ออโต้จ้า!`, '🎉'); 
+                showToast(`สร้าง Checklist เดือน ${targetMonthStr} ออโต้จ้า!`, '🎉');
             }
         }
     }
-    
+
     if (goalsList) goalsList.innerHTML = '';
     if (!goals || goals.length === 0) {
         if (goalsList) goalsList.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">ไม่มีภารกิจการเงินระบุไว้</p>';
@@ -1401,7 +1401,7 @@ async function loadGoals() {
         updateInsightsAndProgress();
         return;
     }
-    
+
     goals.forEach(goal => {
         if (!goal || !goal.title) return;
         let goalType = goal.type;
@@ -1411,11 +1411,11 @@ async function loadGoals() {
             goalType = typeMatch[1];
             goalTitle = goalTitle.replace(typeMatch[0], '');
         }
-        
+
         const safeTitle = escapeForAttr(goalTitle);
         const div = document.createElement('div');
         div.className = "list-group-item d-flex justify-content-between align-items-center p-2 mb-1 bg-light rounded-3 border-0 text-sm shadow-2xs";
-        
+
         let actionUI = '';
         if (goal.is_completed) {
             actionUI = `<div class="d-flex align-items-center gap-2"><span class="badge bg-success">✅ สำเร็จ</span><button onclick="resetGoalStatus(${goal.id}, '${safeTitle}')" class="btn btn-outline-secondary btn-sm py-0 px-1 text-xs cursor-pointer" style="border-radius:6px;">↩️ รีเซ็ต</button></div>`;
@@ -1430,7 +1430,7 @@ async function loadGoals() {
                 </div>
             `;
         }
-        
+
         div.innerHTML = `
             <div class="text-truncate me-2">
                 <span class="${goal.is_completed ? 'text-decoration-line-through text-muted' : goal.is_failed ? 'text-decoration-line-through text-black-50 font-normal' : 'fw-semibold text-dark'}">
@@ -1444,7 +1444,7 @@ async function loadGoals() {
         `;
         if (goalsList) goalsList.appendChild(div);
     });
-    
+
     loadedGoalsCache = goals || [];
     updateInsightsAndProgress();
 }
@@ -1453,13 +1453,13 @@ async function settleGoal(id, status, title, amount, type) {
     let realTitle = title;
     let realAmount = amount;
     let realType = type;
-    
+
     const { data: goalData, error: fetchError } = await supabaseClient.from('goals').select('title, amount, type').eq('id', id).single();
     if (!fetchError && goalData && goalData.title) {
         realTitle = goalData.title;
         realAmount = goalData.amount;
         realType = goalData.type;
-        
+
         const typeMatch = realTitle.match(/^\[(save[a-zA-Z0-9_]*)\]\s*/);
         if (typeMatch) {
             realType = typeMatch[1];
@@ -1514,11 +1514,11 @@ async function settleGoal(id, status, title, amount, type) {
 
         const { error } = await supabaseClient.from('goals').update({ is_completed: true, is_failed: false }).eq('id', id);
         if (error) return showToast(error.message, '❌', true);
-        
+
         if (createTx && finalAmount > 0) {
-            if (realType.startsWith('save')) { 
+            if (realType.startsWith('save')) {
                 let emoji = getGoalIcon(realType);
-                
+
                 await supabaseClient.from('transactions').insert([{
                     amount: finalAmount,
                     type: 'expense',
@@ -1535,8 +1535,8 @@ async function settleGoal(id, status, title, amount, type) {
                     owner: 'emergency',
                     note: `ภารกิจสำเร็จ: ${realTitle}`,
                     created_at: new Date().toISOString()
-                }]); 
-                showToast(`ย้ายเงินส่วนที่เหลือเข้าบัญชีออมสำเร็จ ${emoji}`, '🎉'); 
+                }]);
+                showToast(`ย้ายเงินส่วนที่เหลือเข้าบัญชีออมสำเร็จ ${emoji}`, '🎉');
             } else {
                 let noteWithTag = `[จ่ายโดย: ${currentUserRole === 'me' ? 'me' : 'partner'}] จ่ายบิลออโต้: ${realTitle}`;
                 await supabaseClient.from('transactions').insert([{
@@ -1574,7 +1574,7 @@ async function resetGoalStatus(id, title) {
     }
 
     if (!(await showCustomConfirm(`คุณต้องการยกเลิกสถานะของภารกิจ "${realTitle}" เพื่อกลับไปเลือกกดใหม่ ใช่หรือไม่?\n(ระบบจะลบรายการเงินที่เคยบันทึกให้อัตโนมัติ)`, 'รีเซ็ตสถานะภารกิจ', '↩️'))) return;
-    
+
     const { error: goalError } = await supabaseClient.from('goals').update({ is_completed: false, is_failed: false }).eq('id', id);
     if (goalError) return showToast(goalError.message, '❌', true);
 
@@ -1582,7 +1582,7 @@ async function resetGoalStatus(id, title) {
     const notePatternDeduct = `[หักเงินออมภารกิจ] ${realTitle}`;
     const notePatternMe = `[จ่ายโดย: me] จ่ายบิลออโต้: ${realTitle}`;
     const notePatternPartner = `[จ่ายโดย: partner] จ่ายบิลออโต้: ${realTitle}`;
-    
+
     console.log("Attempting to delete transactions with notes:", [notePattern1, notePatternDeduct, notePatternMe, notePatternPartner]);
     const { error: deleteError } = await supabaseClient.from('transactions').delete().in('note', [notePattern1, notePatternDeduct, notePatternMe, notePatternPartner]);
     if (deleteError) {
@@ -1603,10 +1603,10 @@ async function deleteGoalFrontend(id) {
     const targetMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     const { error } = await supabaseClient.from('goals').delete().eq('id', id);
     if (error) showToast(error.message, '❌', true);
-    else { 
+    else {
         localStorage.setItem(`defaultGoalsCreated_${targetMonthStr}`, 'true');
-        showToast('ลบภารกิจออกแล้ว', '🗑️'); 
-        await loadGoals(); 
+        showToast('ลบภารกิจออกแล้ว', '🗑️');
+        await loadGoals();
     }
 }
 
@@ -1684,11 +1684,11 @@ async function payBill(index) {
     if (!(await showCustomConfirm(`ยืนยันจ่ายบิลประจำสำหรับ: "${bill.title}" ยอดเงิน ${bill.amount.toLocaleString()} บาท?\n(ระบบจะสร้างธุรกรรมรายจ่ายให้อัตโนมัติ)`, 'ยืนยันจ่ายบิล', '💳'))) return;
 
     const now = new Date();
-    const monthYearKey = `${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getFullYear()}`;
+    const monthYearKey = `${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getFullYear()}`;
 
     let dbOwner = bill.share;
     let finalNote = `[จ่ายบิลประจำ] ${bill.title}`;
-    
+
     if (dbOwner === 'shared-me') { dbOwner = 'shared'; finalNote = `[จ่ายโดย: me] ${finalNote}`; }
     else if (dbOwner === 'shared-partner') { dbOwner = 'shared'; finalNote = `[จ่ายโดย: partner] ${finalNote}`; }
 
@@ -1722,14 +1722,14 @@ function renderRecurringBills() {
     }
 
     const now = new Date();
-    const monthYearKey = `${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getFullYear()}`;
+    const monthYearKey = `${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getFullYear()}`;
     const nameMe = localStorage.getItem('nameMe') || 'คุณโบ๊ท';
     const namePartner = localStorage.getItem('namePartner') || 'คุณเอิร์น';
 
     list.innerHTML = '';
     recurringBills.forEach((bill, idx) => {
         const isPaidThisMonth = bill.history[monthYearKey] === true;
-        
+
         let shareText = '';
         if (bill.share === 'shared-me') shareText = `🤝 กองกลาง (${nameMe} จ่ายก่อน)`;
         else if (bill.share === 'shared-partner') shareText = `🤝 กองกลาง (${namePartner} จ่ายก่อน)`;
@@ -1740,7 +1740,7 @@ function renderRecurringBills() {
         row.className = "d-flex align-items-center justify-content-between p-2 mb-2 bg-light rounded-3 text-xs";
         row.style.backgroundColor = "var(--light-bg)";
         row.style.border = "1px solid var(--card-border)";
-        
+
         let actionHTML = '';
         if (isPaidThisMonth) {
             actionHTML = `<span class="badge bg-success-subtle text-success py-1 px-2.5 rounded-pill fw-bold"><i class="bi bi-check-circle-fill me-1"></i> จ่ายแล้ว</span>`;
@@ -1833,24 +1833,24 @@ async function spinWheel() {
     if (isSpinning) return;
     const ongoing = localStorage.getItem('ongoingQuest');
     if (ongoing) { await showCustomAlert("คุณมีภารกิจคาอยู่นะ ทำภารกิจปัจจุบันให้เสร็จ หรือกดยอมแพ้ก่อนสปินใหม่น้าา!", "มีภารกิจค้างอยู่", "🐻"); return; }
-    
+
     isSpinning = true;
     const btn = document.getElementById("btnSpin");
     if (btn) btn.disabled = true;
-    
+
     const activeQuestArea = document.getElementById("activeQuestArea");
     if (activeQuestArea) activeQuestArea.classList.add("d-none");
-    
+
     spinVelocity = 0.25 + Math.random() * 0.25;
     let lastTickAngle = 0;
-    
+
     function animateSpin() {
         currentAngle += spinVelocity;
         spinVelocity *= 0.982;
-        
+
         const arcSize = (2 * Math.PI) / wheelTasks.length;
-        const currentSegmentIdx = Math.floor(((currentAngle + Math.PI/2) % (2 * Math.PI)) / arcSize);
-        const lastSegmentIdx = Math.floor(((lastTickAngle + Math.PI/2) % (2 * Math.PI)) / arcSize);
+        const currentSegmentIdx = Math.floor(((currentAngle + Math.PI / 2) % (2 * Math.PI)) / arcSize);
+        const lastSegmentIdx = Math.floor(((lastTickAngle + Math.PI / 2) % (2 * Math.PI)) / arcSize);
         if (currentSegmentIdx !== lastSegmentIdx) {
             playSynthSound("tick");
             lastTickAngle = currentAngle;
@@ -1874,13 +1874,13 @@ function determineWinningSegment() {
     const numSegments = wheelTasks.length; const arcSize = (2 * Math.PI) / numSegments;
     let relAngle = (-Math.PI / 2 - currentAngle) % (2 * Math.PI);
     if (relAngle < 0) relAngle += 2 * Math.PI;
-    
+
     const winningIdx = Math.floor(relAngle / arcSize) % numSegments;
     const wonQuest = wheelTasks[winningIdx];
-    
+
     playSynthSound("success");
     activeQuestTemp = wonQuest;
-    
+
     const activeQuestArea = document.getElementById("activeQuestArea");
     const questText = document.getElementById("questText");
     if (activeQuestArea && questText) {
@@ -1908,7 +1908,7 @@ function renderQuestState() {
     const activeArea = document.getElementById("activeQuestArea");
     const ongoingArea = document.getElementById("ongoingQuestArea");
     const ongoingText = document.getElementById("ongoingQuestText");
-    
+
     if (ongoing) {
         const quest = JSON.parse(ongoing);
         if (ongoingArea && ongoingText) {
@@ -1925,11 +1925,11 @@ async function completeQuest() {
     const ongoing = localStorage.getItem("ongoingQuest");
     if (!ongoing) return;
     const quest = JSON.parse(ongoing);
-    
+
     if (quest.type === "deposit") {
         const amount = parseFloat(quest.val);
         const noteText = `[เควสสุ่มรายวัน] ทำสำเร็จ: ${quest.text}`;
-        
+
         try {
             const { error } = await supabaseClient.from("transactions").insert([{
                 amount: amount,
@@ -1949,12 +1949,12 @@ async function completeQuest() {
     } else {
         showToast(`🎉 เก่งมาก! ทำภารกิจสำเร็จ: ${quest.text}`, "✨");
     }
-    
+
     playSynthSound("cash");
     if (typeof confetti === "function") {
         confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
     }
-    
+
     localStorage.removeItem("ongoingQuest");
     renderQuestState();
     loadTransactions();
@@ -1999,18 +1999,18 @@ function calculateSplitResult() {
     const amtInput = document.getElementById("splitAmount").value;
     const summaryEl = document.getElementById("splitSummaryText");
     if (!summaryEl) return;
-    
+
     if (!amtInput || parseFloat(amtInput) <= 0) {
         summaryEl.innerHTML = "กรุณากรอกยอดเงิน";
         return;
     }
-    
+
     const amount = parseFloat(amtInput);
     const payer = document.getElementById("splitPayer").value;
     const ratioVal = document.getElementById("splitRatio").value;
-    
+
     let mePct = 50; let partnerPct = 50;
-    
+
     if (ratioVal === "50-50") { mePct = 50; partnerPct = 50; }
     else if (ratioVal === "60-40") { mePct = 60; partnerPct = 40; }
     else if (ratioVal === "40-60") { mePct = 40; partnerPct = 60; }
@@ -2019,10 +2019,10 @@ function calculateSplitResult() {
         if (isNaN(mePct)) mePct = 50;
         partnerPct = 100 - mePct;
     }
-    
+
     const nameMe = localStorage.getItem("nameMe") || "คุณโบ๊ท";
     const namePartner = localStorage.getItem("namePartner") || "คุณเอิร์น";
-    
+
     if (payer === "me") {
         const payBack = amount * (partnerPct / 100);
         summaryEl.innerHTML = `💸 ยอดรวม ${amount.toLocaleString()} บ. (${nameMe} ออกก่อน)<br><b>${namePartner} ต้องโอนคืน ${nameMe}</b> = <span class="fs-4 text-indigo fw-extrabold">${formatBaht(payBack)}</span>`;
@@ -2035,16 +2035,16 @@ function calculateSplitResult() {
 async function saveSplitBill() {
     const title = document.getElementById("splitTitle").value.trim();
     const amtInput = document.getElementById("splitAmount").value;
-    
+
     if (!title) { await showCustomAlert("กรุณากรอกชื่อรายการค่าใช้จ่าย!", "ข้อมูลไม่ครบถ้วน", "⚠️"); return; }
     if (!amtInput || parseFloat(amtInput) <= 0) { await showCustomAlert("กรุณากรอกยอดเงินรวมให้ถูกต้อง!", "ยอดเงินไม่ถูกต้อง", "🔢"); return; }
-    
+
     const amount = parseFloat(amtInput);
     const payer = document.getElementById("splitPayer").value;
     const ratioVal = document.getElementById("splitRatio").value;
-    
+
     let mePct = 50; let partnerPct = 50;
-    
+
     if (ratioVal === "50-50") { mePct = 50; partnerPct = 50; }
     else if (ratioVal === "60-40") { mePct = 60; partnerPct = 40; }
     else if (ratioVal === "40-60") { mePct = 40; partnerPct = 60; }
@@ -2056,12 +2056,12 @@ async function saveSplitBill() {
 
     const nameMe = localStorage.getItem("nameMe") || "คุณโบ๊ท";
     const namePartner = localStorage.getItem("namePartner") || "คุณเอิร์น";
-    
+
     if (!(await showCustomConfirm(`ต้องการบันทึกค่าใช้จ่าย "${title}" ยอดเงิน ${amount.toLocaleString()} บ. (สัดส่วน โบ๊ท ${mePct}% : เอิร์น ${partnerPct}%) เข้ากองกลาง?`, 'บันทึกค่าใช้จ่ายกองกลาง', '🤝'))) return;
 
     let prefix = payer === "me" ? "[จ่ายโดย: me]" : "[จ่ายโดย: partner]";
     let finalNote = `${prefix} [หารค่าใช้จ่าย] ${title} (สัดส่วน โบ๊ท ${mePct}% : เอิร์น ${partnerPct}%)`;
-    
+
     try {
         const { error } = await supabaseClient.from("transactions").insert([{
             amount: amount,
@@ -2071,12 +2071,12 @@ async function saveSplitBill() {
             owner: "shared",
             created_at: new Date().toISOString()
         }]);
-        
+
         if (error) throw error;
-        
+
         showToast("บันทึกค่าใช้จ่ายหารลง Supabase กองกลางสำเร็จ! 🍕", "🤝");
         playSynthSound("cash");
-        
+
         document.getElementById("splitTitle").value = "";
         document.getElementById("splitAmount").value = "";
         calculateSplitResult();
@@ -2095,7 +2095,7 @@ function exportCSV() {
     }
 
     const headers = ['วันที่ (Date)', 'ประเภท (Type)', 'หมวดหมู่ (Category)', 'จำนวนเงิน (Amount)', 'กระเป๋าเงิน (Wallet)', 'บันทึกช่วยจำ (Note)', 'อารมณ์ (Emotion)'];
-    
+
     // แปลงเจ้าของ (Owner) เป็นชื่อที่อ่านได้ง่ายขึ้น
     const nameMe = localStorage.getItem('nameMe') || 'คุณโบ๊ท';
     const namePartner = localStorage.getItem('namePartner') || 'คุณเอิร์น';
@@ -2146,19 +2146,19 @@ function exportCSV() {
     const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-    
+
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    
+
     // ตั้งชื่อไฟล์ CSV เช่น wallet_report_2026-06-27.csv
     const now = new Date();
     const formattedDate = now.toISOString().slice(0, 10);
     link.setAttribute('download', `wallet_report_${formattedDate}.csv`);
-    
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     showToast('ดาวน์โหลดรายงาน CSV สำเร็จแล้วครับ!', '📥');
 }
 
@@ -2167,19 +2167,19 @@ function exportCSV() {
 function generateMonthlyReportPDF() {
     const printContainer = document.getElementById("monthlyReportPrintLayout");
     if (!printContainer) return;
-    
+
     const now = new Date();
     const monthsTh = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
     const monthTitle = `${monthsTh[now.getMonth()]} ${now.getFullYear() + 543}`;
-    
+
     const nameMe = localStorage.getItem("nameMe") || "คุณโบ๊ท";
     const namePartner = localStorage.getItem("namePartner") || "คุณเอิร์น";
-    
+
     const myBal = document.getElementById("myTotal")?.innerText || "0.00 บาท";
     const partnerBal = document.getElementById("partnerTotal")?.innerText || "0.00 บาท";
     const sharedBal = document.getElementById("sharedTotal")?.innerText || "0.00 บาท";
     const emergencyBal = document.getElementById("emergencyTotal")?.innerText || "0.00 บาท";
-    
+
     let txRowsHTML = "";
     const tbody = document.getElementById("transactionTableBody");
     if (tbody) {
@@ -2207,7 +2207,7 @@ function generateMonthlyReportPDF() {
             }
         });
     }
-    
+
     if (!txRowsHTML) {
         txRowsHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; color: #94a3b8;">ไม่มีข้อมูลรายการเงินในรอบเดือนนี้</td></tr>`;
     }
@@ -2326,7 +2326,8 @@ async function processSingleSlip(file, liveGeminiKey) {
     const promptPayload = {
         contents: [{
             parts: [
-                { text: `นี่คือรูปสลิปโอนเงินของธนาคารในไทย ให้แกะข้อมูลต่อไปนี้จากสลิป:
+                {
+                    text: `นี่คือรูปสลิปโอนเงินของธนาคารในไทย ให้แกะข้อมูลต่อไปนี้จากสลิป:
 1. "amount" — ยอดเงินสุทธิที่โอนสำเร็จ (Total/Amount) เป็นตัวเลขทศนิยม เช่น 150.00
 2. "date" — วันที่ทำรายการในรูปแบบ YYYY-MM-DD (เช่น 2026-06-19) ถ้าไม่มีให้ใส่ null
 3. "receiver" — ชื่อผู้รับเงินหรือชื่อร้านค้า/บัญชีปลายทาง ถ้าไม่มีให้ใส่ null
@@ -2582,7 +2583,7 @@ async function loadCategories() {
         txCategorySelect.innerHTML = '';
         const expenseGroup = document.createElement('optgroup'); expenseGroup.label = '🔴 หมวดหมู่รายจ่าย';
         const incomeGroup = document.createElement('optgroup'); incomeGroup.label = '🟢 หมวดหมู่รายรับ';
-        
+
         categories.forEach(cat => {
             const opt = document.createElement('option');
             opt.value = cat.name;
@@ -2608,7 +2609,7 @@ window.onload = function () {
     setTimeout(async () => {
         try {
             setupSlipScannerListener();
-            
+
             const activeTab = localStorage.getItem('activeTab') || 'dashboard';
             switchTab(activeTab);
 
