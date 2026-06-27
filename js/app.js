@@ -97,9 +97,42 @@ function syncEmergencyLabels() {
 
 // === 📈 Charts & Analytics Rendering (ระบบสร้างแผนภูมิและวิเคราะห์ประวัติเงิน) ===
 
+window.myCharts = window.myCharts || {};
+
+function getCategoryColor(cat) {
+    const colors = {
+        'ค่าอาหาร': '#f87171',
+        'ค่าอาหาร 🍔': '#f87171',
+        'ค่าอาหาร/เครื่องดื่ม': '#f87171',
+        'ค่าบ้าน/ที่พัก': '#a78bfa',
+        'ค่าน้ำมัน': '#fbbf24',
+        'ช้อปปิ้ง': '#f472b6',
+        'ความบันเทิง': '#60a5fa',
+        'ลงทุน': '#34d399',
+        'สลิปรอระบุหมวดหมู่': '#facc15',
+        'อื่นๆ': '#94a3b8'
+    };
+    // Clean emoji out of the category name
+    const clean = cat.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, "").trim();
+    return colors[clean] || colors[cat] || '#818cf8';
+}
+
 function renderMonthlyTrend(allTxs) {
     const area = document.getElementById('monthlyTrendArea');
     if (!area) return;
+    area.innerHTML = '';
+
+    // Create canvas
+    const canvas = document.createElement('canvas');
+    canvas.id = 'monthlyTrendChart';
+    canvas.style.maxHeight = '180px';
+    canvas.style.width = '100%';
+    area.appendChild(canvas);
+
+    // Create info div for trend text
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'd-flex justify-content-between align-items-center mt-2 px-1';
+    area.appendChild(infoDiv);
 
     // คำนวณ 6 เดือนย้อนหลังรวมเดือนปัจจุบัน
     const now = new Date();
@@ -122,7 +155,7 @@ function renderMonthlyTrend(allTxs) {
             note.includes('[หักออมอัตโนมัติ') ||
             note.includes('[ออมเพื่อ:');
 
-        if (isInternalTransfer) return; // ข้ามยอดเงินโอนออมภายใน ไม่นำมาคิดเป็นรายรับ/รายจ่ายจริงของบ้าน
+        if (isInternalTransfer) return; // ข้ามยอดเงินโอนออมภายใน
         
         const txDate = new Date(tx.created_at);
         const txAmount = parseFloat(tx.amount);
@@ -132,38 +165,72 @@ function renderMonthlyTrend(allTxs) {
         else monthlyData[idx].expense += txAmount;
     });
 
-    const maxVal = Math.max(...monthlyData.map(m => Math.max(m.income, m.expense)), 1);
-    let html = `<div class="d-flex align-items-end justify-content-between gap-1" style="height: 195px; padding-bottom: 4px;">`;
+    // Render Chart.js Bar Chart
+    if (window.myCharts.monthlyTrendChart) {
+        window.myCharts.monthlyTrendChart.destroy();
+    }
 
-    monthlyData.forEach((m, i) => {
-        const incomeH = Math.max(2, (m.income / maxVal) * 125);
-        const expenseH = Math.max(2, (m.expense / maxVal) * 125);
-        const isCurrentMonth = (i === monthlyData.length - 1);
+    const labels = monthlyData.map(m => m.label);
+    const incomeData = monthlyData.map(m => m.income);
+    const expenseData = monthlyData.map(m => m.expense);
 
-        html += `<div class="d-flex flex-column align-items-center flex-fill" style="min-width: 0;">`;
-        html += `<div class="d-flex flex-column align-items-center mb-1 text-center" style="font-size: 0.55rem; line-height: 1.2; min-height: 28px; justify-content: end;">`;
-        if (m.income > 0) {
-            html += `<span class="text-success fw-bold">+${m.income.toLocaleString('th-TH', { maximumFractionDigits: 0 })}</span>`;
-        } else {
-            html += `<span class="text-success text-opacity-50" style="opacity: 0.4;">0</span>`;
+    window.myCharts.monthlyTrendChart = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'รายรับ (Income)',
+                    data: incomeData,
+                    backgroundColor: '#10b981', // Emerald 500
+                    borderRadius: 4,
+                    borderWidth: 0,
+                    barPercentage: 0.85,
+                    categoryPercentage: 0.6
+                },
+                {
+                    label: 'รายจ่าย (Expense)',
+                    data: expenseData,
+                    backgroundColor: '#ef4444', // Red 500
+                    borderRadius: 4,
+                    borderWidth: 0,
+                    barPercentage: 0.85,
+                    categoryPercentage: 0.6
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        boxWidth: 12,
+                        font: { size: 10, family: 'Sarabun, sans-serif' }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return ` ${context.dataset.label}: ${context.raw.toLocaleString('th-TH')} บาท`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 10, family: 'Sarabun, sans-serif' } }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                    ticks: { font: { size: 10, family: 'Sarabun, sans-serif' } }
+                }
+            }
         }
-        if (m.expense > 0) {
-            html += `<span class="text-danger fw-bold">-${m.expense.toLocaleString('th-TH', { maximumFractionDigits: 0 })}</span>`;
-        } else {
-            html += `<span class="text-danger text-opacity-50" style="opacity: 0.4;">0</span>`;
-        }
-        html += `</div>`;
-
-        // แท่งกราฟแท่งคู่
-        html += `<div class="d-flex align-items-end gap-1 mb-1" style="height: 130px;">`;
-        html += `<div title="รายรับ: ${formatBaht(m.income)}" style="width: 14px; height: ${incomeH}px; background: linear-gradient(180deg, #34d399, #059669); border-radius: 4px 4px 0 0; transition: height 0.4s ease;"></div>`;
-        html += `<div title="รายจ่าย: ${formatBaht(m.expense)}" style="width: 14px; height: ${expenseH}px; background: linear-gradient(180deg, #f87171, #dc2626); border-radius: 4px 4px 0 0; transition: height 0.4s ease;"></div>`;
-        html += `</div>`;
-        
-        html += `<span class="text-center small ${isCurrentMonth ? 'fw-bold text-primary' : 'text-muted'}" style="font-size: 0.65rem; line-height: 1.1;">${m.label}</span>`;
-        html += `</div>`;
     });
-    html += `</div>`;
 
     // อัตราการเติบโตเปรียบเทียบเดือนก่อน
     const thisMonthData = monthlyData[monthlyData.length - 1];
@@ -177,15 +244,10 @@ function renderMonthlyTrend(allTxs) {
         else trendText = `<span class="text-muted">➡️ รายจ่ายเท่ากับเดือนก่อน</span>`;
     }
 
-    html += `<div class="d-flex justify-content-between align-items-center mt-2 px-1">`;
-    html += `<div class="d-flex gap-3 small">`;
-    html += `<span><span style="display:inline-block;width:10px;height:10px;background:#059669;border-radius:2px;margin-right:4px;"></span>รายรับ</span>`;
-    html += `<span><span style="display:inline-block;width:10px;height:10px;background:#dc2626;border-radius:2px;margin-right:4px;"></span>รายจ่าย</span>`;
-    html += `</div>`;
-    if (trendText) html += `<span class="small fw-medium">${trendText}</span>`;
-    html += `</div>`;
-
-    area.innerHTML = html;
+    infoDiv.innerHTML = `
+        <span class="small text-muted">เปรียบเทียบรายรับ-รายจ่าย</span>
+        ${trendText ? `<span class="small fw-medium">${trendText}</span>` : ''}
+    `;
 }
 
 function renderAnalytics(summary, total) {
@@ -194,32 +256,97 @@ function renderAnalytics(summary, total) {
     area.innerHTML = '';
     
     const sortedCats = Object.keys(summary).map(name => ({ name: name, amount: summary[name] })).sort((a, b) => b.amount - a.amount);
+    
+    const chartContainer = document.getElementById('categoryChartContainer');
+    const wrapper = document.getElementById('analyticsWrapper');
+    
     if (sortedCats.length === 0) {
+        if (chartContainer) chartContainer.classList.add('d-none');
+        if (wrapper) { wrapper.className = "col-12 col-md-12"; }
         area.innerHTML = '<p class="text-center text-muted py-3 w-100 mb-0">❌ ไม่พบสัดส่วนข้อมูลรายจ่ายตามตัวกรองนี้</p>';
         return;
     }
+
+    if (chartContainer) chartContainer.classList.remove('d-none');
+    if (wrapper) { wrapper.className = "col-12 col-md-7"; }
+
     sortedCats.forEach(item => {
         const percentage = total > 0 ? ((item.amount / total) * 100).toFixed(1) : 0;
         const col = document.createElement('div');
-        col.className = "col-12 col-md-6";
+        col.className = "col-12";
         col.innerHTML = `
-            <div class="bg-light p-3 rounded-3 border">
+            <div class="bg-light p-2 px-3 rounded-3 border mb-2">
                 <div class="d-flex justify-content-between small fw-bold mb-1">
-                    <span class="text-dark">${item.name === 'สลิปรอระบุหมวดหมู่' ? '⏳ รอระบุหมวดหมู่' : getCategoryEmoji(item.name)}</span>
+                    <span class="text-dark">${item.name === 'สลิปรอระบุหมวดหมู่' ? '⏳ รอระบุหมวดหมู่' : (typeof getCategoryEmoji === 'function' ? getCategoryEmoji(item.name) : '') + ' ' + item.name}</span>
                     <span class="text-secondary">${formatBaht(item.amount)} (${percentage}%)</span>
                 </div>
                 <div class="progress" style="height: 6px;">
-                    <div class="progress-bar ${item.name === 'สลิปรอระบุหมวดหมู่' ? 'bg-warning' : 'bg-danger'}" style="width: ${percentage}%"></div>
+                    <div class="progress-bar" style="width: ${percentage}%; background-color: ${getCategoryColor(item.name)};"></div>
                 </div>
             </div>
         `;
         area.appendChild(col);
     });
+
+    // Render Chart.js Pie/Doughnut Chart
+    const ctx = document.getElementById('categoryPieChart');
+    if (ctx) {
+        if (window.myCharts.categoryPieChart) {
+            window.myCharts.categoryPieChart.destroy();
+        }
+        
+        const labels = sortedCats.map(x => x.name);
+        const data = sortedCats.map(x => x.amount);
+        const backgroundColors = sortedCats.map(x => getCategoryColor(x.name));
+        
+        window.myCharts.categoryPieChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: backgroundColors,
+                    borderWidth: 2,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const val = context.raw || 0;
+                                const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                                return ` ${context.label}: ${val.toLocaleString('th-TH')} บาท (${pct}%)`;
+                            }
+                        }
+                    }
+                },
+                cutout: '65%'
+            }
+        });
+    }
 }
 
 function renderSavingsTrend(allTxs) {
     const area = document.getElementById('savingsTrendArea');
     if (!area) return;
+    area.innerHTML = '';
+
+    // Create canvas
+    const canvas = document.createElement('canvas');
+    canvas.id = 'savingsTrendChart';
+    canvas.style.maxHeight = '180px';
+    canvas.style.width = '100%';
+    area.appendChild(canvas);
+
+    // Create info div for growth text
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'd-flex justify-content-between align-items-center mt-2 px-1';
+    area.appendChild(infoDiv);
 
     const now = new Date();
     const months = [];
@@ -245,21 +372,66 @@ function renderSavingsTrend(allTxs) {
         return { ...m, balance: Math.max(0, balance) };
     });
 
-    const maxVal = Math.max(...savingsData.map(m => m.balance), 1000);
-    let html = `<div class="d-flex align-items-end justify-content-between gap-1" style="height: 180px; padding-bottom: 4px;">`;
+    // Render Chart.js Line Chart with gradient fill
+    if (window.myCharts.savingsTrendChart) {
+        window.myCharts.savingsTrendChart.destroy();
+    }
 
-    savingsData.forEach((m, i) => {
-        const barH = Math.max(2, (m.balance / maxVal) * 120);
-        const isCurrentMonth = (i === savingsData.length - 1);
+    const labels = savingsData.map(m => m.label);
+    const dataPoints = savingsData.map(m => m.balance);
 
-        html += `<div class="d-flex flex-column align-items-center flex-fill" style="min-width: 0;">`;
-        html += `<span class="text-success fw-bold mb-1" style="font-size: 0.65rem; white-space: nowrap;">${m.balance.toLocaleString('th-TH', { maximumFractionDigits: 0 })} บ.</span>`;
-        html += `<div title="ยอดสะสม: ${formatBaht(m.balance)}" style="width: 24px; height: ${barH}px; background: linear-gradient(180deg, #10b981, #047857); border-radius: 6px 6px 0 0; transition: height 0.4s ease; cursor: pointer;"></div>`;
-        html += `<span class="text-center small mt-1 ${isCurrentMonth ? 'fw-bold text-success' : 'text-muted'}" style="font-size: 0.65rem; line-height: 1.1;">${m.label}</span>`;
-        html += `</div>`;
+    const ctx = canvas.getContext('2d');
+    let gradient = null;
+    if (ctx) {
+        gradient = ctx.createLinearGradient(0, 0, 0, 150);
+        gradient.addColorStop(0, 'rgba(16, 185, 129, 0.4)');
+        gradient.addColorStop(1, 'rgba(16, 185, 129, 0.01)');
+    }
+
+    window.myCharts.savingsTrendChart = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'ยอดสะสมเงินออม',
+                data: dataPoints,
+                borderColor: '#10b981', // Emerald 500
+                borderWidth: 3,
+                backgroundColor: gradient || 'rgba(16, 185, 129, 0.1)',
+                fill: true,
+                tension: 0.35, // Smooth curves
+                pointBackgroundColor: '#10b981',
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return ` ยอดเงินสะสม: ${context.raw.toLocaleString('th-TH')} บาท`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 10, family: 'Sarabun, sans-serif' } }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                    ticks: { font: { size: 10, family: 'Sarabun, sans-serif' } }
+                }
+            }
+        }
     });
-    html += `</div>`;
-    
+
     let growthText = '';
     const firstMonth = savingsData[0];
     const lastMonth = savingsData[savingsData.length - 1];
@@ -273,13 +445,11 @@ function renderSavingsTrend(allTxs) {
             growthText = `<span class="text-muted">ยอดออมสะสมคงที่</span>`;
         }
     }
-    
-    html += `<div class="d-flex justify-content-between align-items-center mt-2 px-1">`;
-    html += `<span class="small text-muted">สะสม ณ สิ้นเดือน</span>`;
-    if (growthText) html += `<span class="small fw-medium">${growthText}</span>`;
-    html += `</div>`;
 
-    area.innerHTML = html;
+    infoDiv.innerHTML = `
+        <span class="small text-muted">สะสม ณ สิ้นเดือน</span>
+        ${growthText ? `<span class="small fw-medium">${growthText}</span>` : ''}
+    `;
 }
 
 // === 🔄 Sorting Operations (ระบบคลิกจัดเรียงแถวตาราง) ===
@@ -2351,6 +2521,7 @@ async function loadCategories() {
 
 function updateInsightsAndProgress() {
     calculateEmergencyProgress();
+    if (typeof renderCoupleJar === 'function') renderCoupleJar();
     calculateAIInsights(loadedTxsCache, currentTotalMePaidShared, currentTotalPartnerPaidShared, loadedGoalsCache);
     updateBearMascotLevel(loadedTxsCache, loadedGoalsCache);
 }

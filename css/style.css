@@ -1,20 +1,20 @@
 :root {
-    --bg-body: #f8fafc;
+    --bg-body: #f1f5f9;
     --color-text: #334155;
     --color-text-muted: #64748b;
-    --card-bg: #ffffff;
-    --card-border: rgba(226, 232, 240, 0.8);
-    --light-bg: #f8fafc;
+    --card-bg: rgba(255, 255, 255, 0.82);
+    --card-border: rgba(226, 232, 240, 0.9);
+    --light-bg: rgba(248, 250, 252, 0.8);
     --text-dark: #0f172a;
 }
 
 [data-theme="dark"] {
     --bg-body: #0b1329;
     --color-text: #cbd5e1;
-    --color-text-muted: #64748b;
-    --card-bg: #111a36;
-    --card-border: rgba(30, 41, 59, 0.8);
-    --light-bg: #1c274c;
+    --color-text-muted: #94a3b8;
+    --card-bg: rgba(17, 26, 54, 0.82);
+    --card-border: rgba(30, 41, 59, 0.9);
+    --light-bg: rgba(28, 39, 76, 0.7);
     --text-dark: #f8fafc;
 }
 
@@ -28,12 +28,14 @@ body {
 .premium-card {
     border: none !important;
     border-radius: 24px !important;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02) !important;
+    box-shadow: 0 8px 32px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.02) !important;
     background-color: var(--card-bg) !important;
     padding: 1.5rem !important;
     margin-bottom: 1.5rem;
     border: 1px solid var(--card-border) !important;
     color: var(--color-text);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
 .header-bar {
@@ -160,11 +162,14 @@ body {
     padding: 0.75rem 1.5rem;
     font-weight: 600;
     border: none;
+    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
 .btn-indigo:hover {
     background: linear-gradient(135deg, #4f46e5, #4338ca);
     color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
 }
 
 .bg-indigo {
@@ -406,6 +411,59 @@ body {
 }
 .bear-mascot:hover {
     transform: scale(1.15) rotate(5deg);
+}
+
+/* ฟองคำพูดพี่หมี */
+.bear-speech-bubble {
+    position: absolute;
+    bottom: 95px; /* Position above the bear */
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--card-bg, #ffffff);
+    color: var(--color-text, #1e293b);
+    border: 1px solid var(--card-border, rgba(99, 102, 241, 0.25));
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    width: 140px;
+    z-index: 10;
+    pointer-events: none;
+    animation: bearSpeechFadeIn 0.3s ease-out forwards;
+}
+
+.bear-speech-arrow {
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%) rotate(45deg);
+    width: 10px;
+    height: 10px;
+    background: var(--card-bg, #ffffff);
+    border-right: 1px solid var(--card-border, rgba(99, 102, 241, 0.25));
+    border-bottom: 1px solid var(--card-border, rgba(99, 102, 241, 0.25));
+}
+
+@keyframes bearSpeechFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.bear-shake {
+    animation: bearShake 0.4s ease-in-out;
+}
+
+@keyframes bearShake {
+    0%, 100% { transform: scale(1) rotate(0); }
+    20%, 60% { transform: scale(1.15) rotate(-8deg); }
+    40%, 80% { transform: scale(1.15) rotate(8deg); }
 }
 
 /* สไตล์วงล้อสุ่ม */

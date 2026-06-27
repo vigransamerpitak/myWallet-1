@@ -593,3 +593,123 @@ function setNoteTag(tag) {
     }
 }
 
+/**
+ * 💖 เรนเดอร์สถิติด้านความสัมพันธ์และการเงินคู่รัก
+ */
+function renderRelationshipHealth() {
+    const card = document.getElementById('relationshipHealthCard');
+    if (!card) return;
+
+    const allTxs = window.loadedTxsCache || [];
+    const filteredTxs = window.filteredTxsCache || [];
+
+    // 1. นับจำนวนกอดทั้งหมดในระบบ
+    const totalHugs = allTxs.filter(tx => tx.note && tx.note.startsWith('[SYSTEM_HUG]')).length;
+
+    // 2. นับยอดอารมณ์ในเดือนปัจจุบัน/ตัวกรอง
+    const emotionCounts = {
+        'ให้รางวัลตัวเอง': 0,
+        'จำเป็นต้องใช้': 0,
+        'ฟุ่มเฟือยไปนิด': 0,
+        'รู้งี้ไม่ซื้อดีกว่า': 0
+    };
+    let totalEmotionalExpenses = 0;
+
+    filteredTxs.forEach(item => {
+        if (item.tx.type === 'expense' && item.emotion) {
+            for (let key in emotionCounts) {
+                if (item.emotion.includes(key)) {
+                    emotionCounts[key]++;
+                    totalEmotionalExpenses++;
+                    break;
+                }
+            }
+        }
+    });
+
+    // 3. คำนวณคะแนน Relationship Health Score
+    let score = 65; // คะแนนตั้งต้น
+    score += Math.min(25, totalHugs * 5); // กอดละ +5% (สูงสุด +25%)
+    score -= (emotionCounts['รู้งี้ไม่ซื้อดีกว่า'] * 6); // เสียดายเงิน -6% ต่อรายการ
+    score -= (emotionCounts['ฟุ่มเฟือยไปนิด'] * 3); // ฟุ่มเฟือย -3% ต่อรายการ
+    score = Math.min(100, Math.max(20, score));
+
+    // กำหนดป้ายสถานะรัก+การเงิน
+    let loveStatus = "🌱 ความสัมพันธ์มั่นคง ร่วมสร้างตัว";
+    let statusClass = "text-indigo";
+    if (score >= 90) {
+        loveStatus = "❤️ หวานฉ่ำดั่งน้ำผึ้งพระจันทร์ (อบอุ่น & ออมเงินได้เยี่ยม)";
+        statusClass = "text-danger";
+    } else if (score >= 75) {
+        loveStatus = "💖 รักกันกลมเกลียว ถนอมน้ำใจและคลังออม";
+        statusClass = "text-primary";
+    } else if (score < 50) {
+        loveStatus = "⚠️ ต้องการกอดก้อนโตและคุยเรื่องงบกันด่วนค๊าบ";
+        statusClass = "text-warning";
+    }
+
+    // สร้างข้อความแนะนำคู่รัก
+    let adviceText = "พฤติกรรมการเงินน่ารักมากๆ ครับ ช่วยกันจัดระเบียบและรักกันแบบนี้ต่อไปน้า! พี่หมีเป็นกำลังใจให้ค๊าบ 🐻💖";
+    if (totalHugs < 3) {
+        adviceText = "ช่วงนี้อาจจะยุ่งหรือเครียด ลองส่งกอดส่งความรัก 🫂 ผ่านปุ่มแชร์กอดให้แฟนเพื่อคลายเหนื่อยกันหน่อยน้า";
+    } else if (emotionCounts['รู้งี้ไม่ซื้อดีกว่า'] >= 3) {
+        adviceText = "เดือนนี้เริ่มมีรายจ่ายที่รู้สึกเสียดายทีหลังบ่อยขึ้น ลองตกลงและทบทวนความจำเป็นร่วมกันก่อนซื้อนะครับ";
+    }
+
+    card.classList.remove('d-none');
+    card.innerHTML = `
+        <div class="row g-3 align-items-center">
+            <div class="col-12 col-md-6 text-center text-md-start border-end border-light border-opacity-25 pe-md-4">
+                <h5 class="fw-bold text-dark mb-1 d-flex align-items-center justify-content-center justify-content-md-start">
+                    <i class="bi bi-heart-pulse-fill text-danger me-2"></i> สุขภาพความสัมพันธ์การเงินคู่รัก 💖
+                </h5>
+                <p class="small text-secondary mb-3">ดัชนีชี้วัดความรักและการออมเงินอย่างมีความสุข</p>
+                
+                <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-3 mb-2">
+                    <div class="fs-1">🥰</div>
+                    <div>
+                        <div class="fs-4 fw-extrabold ${statusClass}">${score}%</div>
+                        <span class="small fw-bold text-secondary">${loveStatus}</span>
+                    </div>
+                </div>
+                <div class="progress mb-3" style="height: 8px; border-radius: 4px;">
+                    <div class="progress-bar bg-danger" style="width: ${score}%; border-radius: 4px;"></div>
+                </div>
+                <div class="p-2.5 bg-light rounded-3 border text-secondary small" style="font-size: 0.72rem; color: var(--color-text-muted) !important;">
+                    <b>💡 คำแนะนำจากพี่หมี:</b> ${adviceText}
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6 ps-md-4">
+                <div class="row g-2 text-center text-md-start">
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded-4 border">
+                            <h6 class="text-secondary small fw-bold mb-1">🫂 ยอดการส่งกอด</h6>
+                            <span class="fs-4 fw-extrabold text-danger">${totalHugs}</span> <span class="small text-muted">ครั้ง</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded-4 border text-truncate">
+                            <h6 class="text-secondary small fw-bold mb-1">🎁 ให้รางวัลตัวเอง</h6>
+                            <span class="fs-4 fw-extrabold text-success">${emotionCounts['ให้รางวัลตัวเอง']}</span> <span class="small text-muted">ครั้ง</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded-4 border">
+                            <h6 class="text-secondary small fw-bold mb-1">⚠️ เสียใจ/รู้งี้ไม่ซื้อ</h6>
+                            <span class="fs-4 fw-extrabold text-warning">${emotionCounts['รู้งี้ไม่ซื้อดีกว่า']}</span> <span class="small text-muted">ครั้ง</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded-4 border">
+                            <h6 class="text-secondary small fw-bold mb-1">💸 ฟุ่มเฟือย/หรูหรา</h6>
+                            <span class="fs-4 fw-extrabold text-dark">${emotionCounts['ฟุ่มเฟือยไปนิด']}</span> <span class="small text-muted">ครั้ง</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+

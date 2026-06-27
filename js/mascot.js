@@ -416,4 +416,92 @@ function updateMilestones(allTxs) {
     });
 }
 
+/**
+ * 🐻 เมื่อผู้ใช้เอาเมาส์มาชี้ที่พี่หมี
+ */
+function onMascotHover() {
+    const bubble = document.getElementById('bearSpeechBubble');
+    const textEl = document.getElementById('bearSpeechText');
+    const mascot = document.getElementById('bearMascot');
+    if (!bubble || !textEl || !mascot) return;
+
+    const face = mascot.innerText;
+    let pool = [];
+
+    if (face.includes('💔')) {
+        pool = [
+            "งื้อออ.. กระเป๋าตังค์เราช้ำหมดแย้วว 💔",
+            "ช่วยกันประหยัดหน่อยน้าโบ๊ทเอิร์น 🥺",
+            "พี่หมีใจสลายแย้ว กินแกลบกันเถอะค๊าบ 🌾"
+        ];
+    } else if (face.includes('⚠️')) {
+        pool = [
+            "หมวดนี้ใช้เยอะไปนิสส.. ⚠️",
+            "ระวังกระเป๋าฉีกนะเธออ! 💦",
+            "ช็อปปิ้งเพลินเลยนะจ๊ะ ระวังตังค์หมดจ้า!"
+        ];
+    } else if (face.includes('🎉')) {
+        pool = [
+            "เดือนนี้พวกเราสุดยอดมากก! 🎉",
+            "รักคนออมเงินที่สุดเลยย 🐻💖",
+            "เก่งมากค๊าบบบบ! อนาคตสดใสแน่นอน 🌟"
+        ];
+    } else {
+        pool = [
+            "มีอะไรให้พี่หมีช่วยมั้ยครับ? 🐻",
+            "วันนี้ออมตังค์กันรึยังนะ? 🤔",
+            "อนาคตสร้างด้วยมือเราสองคนนะ 🏡",
+            "กดจิ้มตัวผมแรงๆ ได้นะค๊าบ! 😄"
+        ];
+    }
+
+    const rndText = pool[Math.floor(Math.random() * pool.length)];
+    textEl.innerText = rndText;
+    bubble.classList.remove('d-none');
+}
+
+/**
+ * 🐻 เมื่อเมาส์ออกนอกตัวพี่หมี
+ */
+function onMascotLeave() {
+    const bubble = document.getElementById('bearSpeechBubble');
+    if (bubble) {
+        bubble.classList.add('d-none');
+    }
+}
+
+/**
+ * 🐻 เมื่อผู้ใช้กดคลิกที่ตัวพี่หมี
+ */
+let bubbleTimeout = null;
+function onMascotClick() {
+    const mascot = document.getElementById('bearMascot');
+    const bubble = document.getElementById('bearSpeechBubble');
+    const textEl = document.getElementById('bearSpeechText');
+    if (!mascot || !bubble || !textEl) return;
+
+    // ทำท่าสั่นระริกสะสม EXP
+    mascot.classList.add('bear-shake');
+    setTimeout(() => mascot.classList.remove('bear-shake'), 400);
+
+    const lovePool = [
+        "พี่หมีเป็นพยานความรักของโบ๊ทเอิร์นนะ! 💖",
+        "จิ้มแบบนี้ เขินจุงเบยยย 🐻👉👈",
+        "ช่วยกันออมตังค์แบบนี้ พี่หมีชื่นใจฝุดๆ!",
+        "วันนี้อย่าลืมบอกรักกันนะค๊าบบบ 🥰",
+        "สู้ๆ น้าคู่รักนักสร้างตัว! 🦾🏆",
+        "ออมวันนี้ รวยวันหน้า เย้! 💰✨"
+    ];
+
+    const rndLove = lovePool[Math.floor(Math.random() * lovePool.length)];
+    textEl.innerText = rndLove;
+    bubble.classList.remove('d-none');
+
+    // แสดงค้างไว้ 2.5 วินาทีแล้วค่อยปิด
+    if (bubbleTimeout) clearTimeout(bubbleTimeout);
+    bubbleTimeout = setTimeout(() => {
+        bubble.classList.add('d-none');
+    }, 2500);
+}
+
 

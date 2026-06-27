@@ -15,6 +15,7 @@ function getGoalIcon(type) {
     if (type === 'save_car') return '🚗';
     if (type === 'save_education') return '🎓';
     if (type === 'save_health') return '🏥';
+    if (type === 'save_couple') return '🍯';
     if (type && type.startsWith('save_')) return '💰';
     return '📄';
 }
@@ -841,4 +842,167 @@ function showEmergencyHistory() {
 
     showCustomAlert(html, `ประวัติ: ${mainTargetTitle}`, '📜');
 }
+
+/**
+ * 🍯❤️ บันทึกตั้งค่ากระปุกออมเงินคู่รัก
+ */
+async function saveSharedJarSetup() {
+    const titleInput = document.getElementById('sharedJarTitle');
+    const targetInput = document.getElementById('sharedJarTarget');
+    if (!titleInput || !targetInput) return;
+
+    const title = titleInput.value.trim();
+    const target = parseFloat(targetInput.value);
+
+    if (!title || isNaN(target) || target <= 0) {
+        return showToast('กรุณากรอกข้อมูลเป้าหมายความฝันและยอดเงินให้ถูกต้องครับ', '⚠️', true);
+    }
+
+    const fullTitle = `[save_couple] ${title}`;
+    const now = new Date();
+    const targetMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    const existing = (loadedGoalsCache || []).find(g => g && (g.type === 'save_couple' || g.title.startsWith('[save_couple]')));
+
+    try {
+        if (existing) {
+            const { error } = await supabaseClient
+                .from('goals')
+                .update({
+                    title: fullTitle,
+                    amount: target
+                })
+                .eq('id', existing.id);
+
+            if (error) throw error;
+        } else {
+            const { error } = await supabaseClient
+                .from('goals')
+                .insert([{
+                    title: fullTitle,
+                    amount: target,
+                    type: 'save_couple',
+                    goal_month: targetMonthStr,
+                    is_completed: false,
+                    is_failed: false
+                }]);
+
+            if (error) throw error;
+        }
+
+        if (typeof triggerCelebration === 'function') triggerCelebration();
+        showToast('ตั้งค่ากระปุกออมเงินร่วมสำเร็จแล้วครับ! 🍯💖', '🎉');
+        if (typeof loadGoals === 'function') await loadGoals();
+    } catch (err) {
+        console.error("Error setting up couple jar:", err);
+        showToast(`บันทึกข้อมูลล้มเหลว: ${err.message}`, '❌', true);
+    }
+}
+
+/**
+ * 🍯❤️ เรนเดอร์สถานะกระปุกออมเงินคู่รักในหน้า Tools
+ */
+function renderCoupleJar() {
+    const titleTextEl = document.getElementById('coupleJarTitleText');
+    const progressTextEl = document.getElementById('coupleJarProgressText');
+    const liquidEl = document.getElementById('coupleJarLiquid');
+    const depositAreaEl = document.getElementById('coupleJarDepositArea');
+    if (!titleTextEl || !progressTextEl || !liquidEl || !depositAreaEl) return;
+
+    const goal = (loadedGoalsCache || []).find(g => g && (g.type === 'save_couple' || g.title.startsWith('[save_couple]')));
+
+    if (!goal) {
+        titleTextEl.innerText = "ยังไม่มีการตั้งเป้าหมายออมคู่";
+        progressTextEl.innerText = "ยอดเงินปัจจุบัน: 0.00 / 0.00 บาท (0%)";
+        liquidEl.style.height = "0%";
+        depositAreaEl.classList.add('d-none');
+        return;
+    }
+
+    const cleanTitle = goal.title.replace(/^\[save_couple\]\s*/, '');
+    titleTextEl.innerText = cleanTitle;
+    depositAreaEl.classList.remove('d-none');
+
+    let accumulated = 0;
+    if (loadedTxsCache) {
+        loadedTxsCache.forEach(tx => {
+            if (tx.owner === 'emergency') {
+                const amt = parseFloat(tx.amount);
+                const isMatch = tx.note && (tx.note.includes(`[ออมเพื่อ: ${goal.title}]`) || tx.note.includes(`[ออมเพื่อ: [save_couple] ${cleanTitle}]`));
+                if (isMatch) {
+                    accumulated += (tx.type === 'income' ? amt : -amt);
+                }
+            }
+        });
+    }
+
+    const target = parseFloat(goal.amount) || 0;
+    const pct = target > 0 ? Math.min(100, Math.max(0, (accumulated / target) * 100)).toFixed(1) : '0.0';
+
+    progressTextEl.innerHTML = `ยอดเงินปัจจุบัน: <b class="text-success">${accumulated.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</b> / ${target.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท (${pct}%)`;
+    liquidEl.style.height = `${pct}%`;
+    
+    const titleInput = document.getElementById('sharedJarTitle');
+    const targetInput = document.getElementById('sharedJarTarget');
+    if (titleInput && document.activeElement !== titleInput) titleInput.value = cleanTitle;
+    if (targetInput && document.activeElement !== targetInput) targetInput.value = target;
+}
+
+/**
+ * 🍯❤️ ฝากเงินหยอดกระปุกคู่รัก
+ */
+async function depositToCoupleJar() {
+    const amountInput = document.getElementById('coupleJarDepositAmount');
+    if (!amountInput) return;
+
+    const amount = parseFloat(amountInput.value);
+    if (isNaN(amount) || amount <= 0) {
+        return showToast('กรุณากรอกจำนวนเงินฝากให้ถูกต้องครับ', '⚠️', true);
+    }
+
+    const goal = (loadedGoalsCache || []).find(g => g && (g.type === 'save_couple' || g.title.startsWith('[save_couple]')));
+    if (!goal) {
+        return showToast('กรุณาตั้งค่าเป้าหมายกระปุกก่อนหยอดเงินครับ', '⚠️', true);
+    }
+
+    const cleanTitle = goal.title.replace(/^\[save_couple\]\s*/, '');
+    const finalAmount = parseFloat(amount.toFixed(2));
+    const userRole = window.currentUserRole || 'me';
+
+    const expenseTx = {
+        amount: finalAmount,
+        type: 'expense',
+        category_name: 'ลงทุน',
+        owner: userRole,
+        note: `[หักเงินออมภารกิจ] หยอดกระปุกร่วม: ${cleanTitle}`,
+        created_at: new Date().toISOString()
+    };
+
+    const incomeTx = {
+        amount: finalAmount,
+        type: 'income',
+        category_name: 'ลงทุน',
+        owner: 'emergency',
+        note: `[ออมเพื่อ: [save_couple] ${cleanTitle}]`,
+        created_at: new Date().toISOString()
+    };
+
+    try {
+        const { error: expError } = await supabaseClient.from('transactions').insert([expenseTx]);
+        if (expError) throw expError;
+
+        const { error: incError } = await supabaseClient.from('transactions').insert([incomeTx]);
+        if (incError) throw incError;
+
+        if (typeof triggerCelebration === 'function') triggerCelebration();
+        showToast(`หยอดกระปุกสำเร็จแล้ว! ฝากออม +${finalAmount.toLocaleString('th-TH')} บ. 🍯💖`, '🎉');
+        
+        amountInput.value = '';
+        if (typeof loadTransactions === 'function') await loadTransactions();
+    } catch (err) {
+        console.error("Error depositing to couple jar:", err);
+        showToast(`ฝากเงินล้มเหลว: ${err.message}`, '❌', true);
+    }
+}
+
 

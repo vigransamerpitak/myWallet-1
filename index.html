@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="css/style.css?v=5">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="config.js?v=5"></script>
     <script src="js/utils.js?v=5" defer></script>
     <script src="js/ui.js?v=5" defer></script>
@@ -232,9 +233,13 @@
                         style="border: 1px solid rgba(99, 102, 241, 0.25) !important; display: flex; flex-direction: column; justify-content: space-between; gap: 16px;">
                         <div class="d-flex align-items-start gap-3 flex-fill">
                             <!-- มาสคอตหมีขยับได้ -->
-                            <div class="bear-mascot-wrapper text-center">
-                                <div id="bearMascot" class="bear-mascot animated-bounce" style="font-size: 3rem;">🐻
+                            <div class="bear-mascot-wrapper text-center position-relative">
+                                <!-- ฟองคำพูดพี่หมี -->
+                                <div id="bearSpeechBubble" class="bear-speech-bubble d-none">
+                                    <span id="bearSpeechText">สะสมตังค์กันครับ!</span>
+                                    <div class="bear-speech-arrow"></div>
                                 </div>
+                                <div id="bearMascot" class="bear-mascot animated-bounce" style="font-size: 3rem; cursor: pointer;" onclick="onMascotClick()" onmouseenter="onMascotHover()" onmouseleave="onMascotLeave()">🐻</div>
                                 <span id="bearBadge" class="badge bg-indigo text-white mt-1"
                                     style="font-size: 0.65rem;">พี่หมี AI</span>
                                 <div class="mascot-exp-container"
@@ -709,42 +714,38 @@
 
         <!-- ==================== 📊 TAB: ANALYTICS ==================== -->
         <div id="section-analytics" class="tab-section d-none">
-            <div class="premium-card">
-                <h5 class="fw-bold text-dark mb-3 d-flex align-items-center"><i
-                        class="bi bi-pie-chart-fill text-danger me-2"></i> สัดส่วนการใช้เงินเยอะ-น้อยประจำเดือน</h5>
-                <div id="analyticsArea" class="row g-3"></div>
+            <!-- 💖 การ์ดวิเคราะห์ความสัมพันธ์และการเงิน (Love & Money Stats) -->
+            <div id="relationshipHealthCard" class="premium-card d-none">
+                <!-- เนื้อหาจะถูกเรนเดอร์ผ่าน JS -->
             </div>
 
             <div class="premium-card">
                 <h5 class="fw-bold text-dark mb-3 d-flex align-items-center"><i
-                        class="bi bi-graph-up text-success me-2"></i> กราฟแนวโน้มรายเดือน (6 เดือนย้อนหลัง)</h5>
-                <div id="monthlyTrendArea">
-                    <div class="skeleton-pulse d-flex align-items-end justify-content-between gap-2 px-3 py-4"
-                        style="height: 150px;">
-                        <div class="bg-secondary bg-opacity-10 rounded-top" style="height: 40%; width: 12%;"></div>
-                        <div class="bg-secondary bg-opacity-10 rounded-top" style="height: 70%; width: 12%;"></div>
-                        <div class="bg-secondary bg-opacity-10 rounded-top" style="height: 55%; width: 12%;"></div>
-                        <div class="bg-secondary bg-opacity-10 rounded-top" style="height: 90%; width: 12%;"></div>
-                        <div class="bg-secondary bg-opacity-10 rounded-top" style="height: 30%; width: 12%;"></div>
-                        <div class="bg-secondary bg-opacity-10 rounded-top" style="height: 80%; width: 12%;"></div>
+                        class="bi bi-pie-chart-fill text-danger me-2"></i> สัดส่วนการใช้เงินรายหมวดหมู่ประจำเดือน</h5>
+                <div class="row g-3 align-items-center">
+                    <div id="categoryChartContainer" class="col-12 col-md-5 d-flex justify-content-center d-none" style="height: 220px; position: relative;">
+                        <canvas id="categoryPieChart"></canvas>
+                    </div>
+                    <div id="analyticsWrapper" class="col-12 col-md-12">
+                        <div id="analyticsArea" class="row g-2"></div>
                     </div>
                 </div>
             </div>
 
             <div class="premium-card">
                 <h5 class="fw-bold text-dark mb-3 d-flex align-items-center"><i
-                        class="bi bi-shield-shaded text-success me-2"></i> กราฟสะสม<span
+                        class="bi bi-graph-up text-success me-2"></i> กราฟเปรียบเทียบรายรับ-รายจ่าย (6 เดือนย้อนหลัง)</h5>
+                <div id="monthlyTrendArea" style="position: relative; min-height: 220px;">
+                    <!-- canvas จะสร้างที่นี่โดย JS -->
+                </div>
+            </div>
+
+            <div class="premium-card">
+                <h5 class="fw-bold text-dark mb-3 d-flex align-items-center"><i
+                        class="bi bi-shield-shaded text-success me-2"></i> กราฟสะสมยอด<span
                         id="labelChartEmergency">เงินออมสำรองฉุกเฉิน</span> (6 เดือนย้อนหลัง)</h5>
-                <div id="savingsTrendArea">
-                    <div class="skeleton-pulse d-flex align-items-end justify-content-between gap-2 px-3 py-4"
-                        style="height: 150px;">
-                        <div class="bg-secondary bg-opacity-10 rounded-top" style="height: 25%; width: 12%;"></div>
-                        <div class="bg-secondary bg-opacity-10 rounded-top" style="height: 45%; width: 12%;"></div>
-                        <div class="bg-secondary bg-opacity-10 rounded-top" style="height: 60%; width: 12%;"></div>
-                        <div class="bg-secondary bg-opacity-10 rounded-top" style="height: 75%; width: 12%;"></div>
-                        <div class="bg-secondary bg-opacity-10 rounded-top" style="height: 90%; width: 12%;"></div>
-                        <div class="bg-secondary bg-opacity-10 rounded-top" style="height: 95%; width: 12%;"></div>
-                    </div>
+                <div id="savingsTrendArea" style="position: relative; min-height: 220px;">
+                    <!-- canvas จะสร้างที่นี่โดย JS -->
                 </div>
             </div>
         </div>
@@ -893,6 +894,56 @@
                 </div>
             </div>
 
+            <!-- 🍯❤️ กระปุกออมเงินคู่รัก (Shared Couple Saving Jar) -->
+            <div class="premium-card mt-4">
+                <div class="row g-4 align-items-center">
+                    <div class="col-12 col-md-5">
+                        <h5 class="fw-bold text-dark mb-2 d-flex align-items-center">
+                            <i class="bi bi-heart-fill text-danger me-2"></i> กระปุกออมเงินคู่รัก 🍯❤️
+                        </h5>
+                        <p class="small text-secondary mb-3">หยอดกระปุกสะสมเงินสำหรับเป้าหมายความฝันพิเศษร่วมกัน</p>
+                        
+                        <div class="mb-2">
+                            <label for="sharedJarTitle" class="form-label small fw-bold text-secondary mb-1">ชื่อเป้าหมายความฝัน</label>
+                            <input type="text" id="sharedJarTitle" placeholder="เช่น ทริปเที่ยวญี่ปุ่น ✈️🇯🇵, ซื้อเครื่องซักผ้าใหม่" class="form-control form-control-sm">
+                        </div>
+                        <div class="mb-3">
+                            <label for="sharedJarTarget" class="form-label small fw-bold text-secondary mb-1">เป้าหมายเงินออม (บาท)</label>
+                            <input type="number" id="sharedJarTarget" placeholder="50000" class="form-control form-control-sm fw-bold">
+                        </div>
+                        <button onclick="saveSharedJarSetup()" class="btn btn-indigo fw-bold w-100 py-2 rounded-3 mb-2 shadow-2xs text-sm">
+                            🎯 บันทึกตั้งค่ากระปุก
+                        </button>
+                    </div>
+
+                    <div class="col-12 col-md-7 border-start border-light border-opacity-25 ps-md-4">
+                        <div class="d-flex flex-column align-items-center justify-content-center p-3 text-center">
+                            <!-- Visual Animated Jar -->
+                            <div class="dream-jar-container" style="width: 80px; height: 110px; margin-bottom: 12px; position: relative;">
+                                <div class="dream-jar-lid" style="width: 56px; height: 10px;"></div>
+                                <div class="dream-jar-neck" style="width: 60px; height: 8px; top: 10px;"></div>
+                                <div class="dream-jar" style="border-radius: 12px 12px 32px 32px; border-width: 3px; height: 95px; width: 80px; top: 15px; overflow: hidden;">
+                                    <div id="coupleJarLiquid" class="dream-jar-liquid" style="height: 0%; background: linear-gradient(180deg, #f472b6, #db2777); transition: height 0.6s ease;"></div>
+                                    <div class="sparkle-particle" style="left:20px; animation-delay: 0.1s; width:5px; height:5px;"></div>
+                                    <div class="sparkle-particle" style="left:40px; animation-delay: 0.7s; width:6px; height:6px;"></div>
+                                </div>
+                            </div>
+                            
+                            <h6 id="coupleJarTitleText" class="fw-extrabold text-dark mb-1">ยังไม่มีการตั้งเป้าหมายออมคู่</h6>
+                            <p id="coupleJarProgressText" class="small text-secondary mb-3">ยอดเงินปัจจุบัน: 0.00 / 0.00 บาท (0%)</p>
+                            
+                            <!-- deposit form -->
+                            <div id="coupleJarDepositArea" class="d-none w-100" style="max-width: 280px;">
+                                <div class="input-group input-group-sm mb-2">
+                                    <input type="number" id="coupleJarDepositAmount" class="form-control text-center fw-bold" placeholder="จำนวนเงินฝาก (บาท)">
+                                    <button onclick="depositToCoupleJar()" class="btn btn-success fw-bold px-3">💖 หยอดกระปุก</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- การ์ดส่งออกรายงาน PDF -->
             <div class="premium-card mt-4">
                 <div
