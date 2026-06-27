@@ -250,11 +250,55 @@ function renderMonthlyTrend(allTxs) {
     `;
 }
 
-function renderAnalytics(summary, total) {
+function renderAnalytics(summary, total, totalIncome) {
     const area = document.getElementById('analyticsArea');
     if (!area) return;
     area.innerHTML = '';
     
+    // แสดงสัดส่วนรายรับ-รายจ่ายเทียบในเดือนนี้
+    const compArea = document.getElementById('analyticsComparisonArea');
+    if (compArea) {
+        compArea.innerHTML = '';
+        const incomeVal = totalIncome || 0;
+        if (incomeVal > 0) {
+            const ratio = ((total / incomeVal) * 100).toFixed(1);
+            const isOverHalf = parseFloat(ratio) > 50;
+            
+            if (isOverHalf) {
+                compArea.innerHTML = `
+                    <div class="p-3 bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded-4 text-center">
+                        <h6 class="small fw-bold text-danger mb-1">⚠️ คำเตือน: ยอดรายจ่ายในเกณฑ์นี้ของคุณ เกินครึ่งหนึ่งของรายรับแล้ว!</h6>
+                        <p class="mb-0 text-dark small">
+                            รายรับรวม: <b>${formatBaht(incomeVal)}</b> | 
+                            รายจ่ายรวม: <b>${formatBaht(total)}</b> | 
+                            สัดส่วนการใช้จ่าย: <b class="text-danger fs-6">${ratio}%</b> ของรายรับ
+                        </p>
+                    </div>
+                `;
+            } else {
+                compArea.innerHTML = `
+                    <div class="p-3 bg-success bg-opacity-10 border border-success border-opacity-25 rounded-4 text-center">
+                        <h6 class="small fw-bold text-success mb-1">✅ ปลอดภัย: ยอดรายจ่ายยังไม่เกินครึ่งหนึ่งของรายรับประจำช่วงเวลา</h6>
+                        <p class="mb-0 text-dark small">
+                            รายรับรวม: <b>${formatBaht(incomeVal)}</b> | 
+                            รายจ่ายรวม: <b>${formatBaht(total)}</b> | 
+                            สัดส่วนการใช้จ่าย: <b class="text-success fs-6">${ratio}%</b> ของรายรับ
+                        </p>
+                    </div>
+                `;
+            }
+        } else {
+            compArea.innerHTML = `
+                <div class="p-3 bg-light rounded-4 text-center border">
+                    <h6 class="small fw-bold text-secondary mb-1">💡 ข้อมูลทางการเงินประจำช่วงเวลา</h6>
+                    <p class="mb-0 text-dark small">
+                        รายรับรวม: <b>0.00 บาท</b> | รายจ่ายรวม: <b>${formatBaht(total)}</b>
+                    </p>
+                </div>
+            `;
+        }
+    }
+
     const sortedCats = Object.keys(summary).map(name => ({ name: name, amount: summary[name] })).sort((a, b) => b.amount - a.amount);
     
     const chartContainer = document.getElementById('categoryChartContainer');
@@ -583,7 +627,7 @@ async function loadTransactions() {
     let myTotal = 0; let partnerTotal = 0; let sharedTotal = 0; let emergencyTotal = 0;
     let totalMePaidShared = 0; let totalPartnerPaidShared = 0;
     let totalMeActualShare = 0; let totalPartnerActualShare = 0;
-    let categorySummary = {}; let totalExpenseFiltered = 0;
+    let categorySummary = {}; let totalExpenseFiltered = 0; let totalIncomeFiltered = 0;
     const now = new Date(); const thisMonth = now.getMonth(); const thisYear = now.getFullYear();
 
     filteredTxsCache = [];
@@ -658,7 +702,7 @@ async function loadTransactions() {
         }
         let passTypeFilter = true; if (filterType !== 'all' && tx.type !== filterType) passTypeFilter = false;
 
-        if (isCurrentFilterMonth && passOwnerFilter && passTypeFilter && tx.type === 'expense') {
+        if (isCurrentFilterMonth) {
             const note = tx.note || '';
             const isInternalTransfer = 
                 exactOwner === 'emergency' ||
@@ -669,11 +713,22 @@ async function loadTransactions() {
                 note.includes('[หักออมอัตโนมัติ') ||
                 note.includes('[ออมเพื่อ:');
 
-            if (isInternalTransfer) {
-                // ข้ามยอดเงินโอนออมภายใน เพื่อไม่ให้นับสะสมเป็นยอดรายจ่ายจริง
-            } else {
-                if (!categorySummary[tx.category_name]) categorySummary[tx.category_name] = 0;
-                categorySummary[tx.category_name] += txAmount; totalExpenseFiltered += txAmount;
+            if (!isInternalTransfer) {
+                if (tx.type === 'income') {
+                    let passOwnerIncome = true;
+                    if (filterOwner !== 'all') {
+                        if (filterOwner === 'me' && exactOwner !== 'me') passOwnerIncome = false;
+                        if (filterOwner === 'partner' && exactOwner !== 'partner') passOwnerIncome = false;
+                        if (filterOwner === 'shared' && exactOwner !== 'shared') passOwnerIncome = false;
+                    }
+                    if (passOwnerIncome) {
+                        totalIncomeFiltered += txAmount;
+                    }
+                } else if (tx.type === 'expense' && passOwnerFilter && passTypeFilter) {
+                    if (!categorySummary[tx.category_name]) categorySummary[tx.category_name] = 0;
+                    categorySummary[tx.category_name] += txAmount;
+                    totalExpenseFiltered += txAmount;
+                }
             }
         }
 
@@ -778,7 +833,7 @@ async function loadTransactions() {
         if (billSummaryTextEl) billSummaryTextEl.innerHTML = `รายจ่ายกองกลาง${monthLabel}รวม: <b>${formatBaht(grandSharedExpense)}</b> (คำนวณตามสัดส่วนจริง)<br><div class="text-center mt-2 small text-white-50" style="font-size: 0.8rem;">• ${nameMe} ควักจ่ายล่วงหน้า: ${totalMePaidShared.toLocaleString()} บ. | ${namePartner} ควักจ่ายล่วงหน้า: ${totalPartnerPaidShared.toLocaleString()} บ.</div><hr class="my-2 text-white-50"><div class="text-center">${settlementResultText}</div>`;
     }
     
-    renderAnalytics(categorySummary, totalExpenseFiltered);
+    renderAnalytics(categorySummary, totalExpenseFiltered, totalIncomeFiltered);
     renderMonthlyTrend(txs);
     renderSavingsTrend(txs);
     updateMilestones(txs);
