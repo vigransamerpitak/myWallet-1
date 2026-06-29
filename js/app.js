@@ -902,119 +902,124 @@ async function saveTransaction(categoryName, type) {
     if (isNaN(amount) || amount <= 0) return showToast('กรุณากรอกจำนวนเงินให้ถูกต้องก่อนเลือกหมวดหมู่', '🔢', true);
     const finalAmount = parseFloat(amount.toFixed(2));
 
-    setAllCategoryButtonsLoading(true);
+    try {
+        setAllCategoryButtonsLoading(true);
 
-    let dbOwner = ownerInput.value;
-    let finalNote = noteInput.value.trim();
-    if (type === 'expense' && window.currentSpendEmotion) {
-        finalNote = `[อารมณ์: ${window.currentSpendEmotion}] ${finalNote}`.trim();
-    }
-
-    const savingPurposeInput = document.getElementById('txSavingPurpose');
-    if (dbOwner === 'emergency' && savingPurposeInput) {
-        const purposeVal = savingPurposeInput.value.trim();
-        if (purposeVal) {
-            finalNote = finalNote ? `[ออมเพื่อ: ${purposeVal}] ${finalNote}` : `[ออมเพื่อ: ${purposeVal}]`;
-        }
-    }
-
-    let isEmergencyTransfer = false;
-    let emergencyTransferNote = '';
-    if (dbOwner === 'emergency') {
-        isEmergencyTransfer = true;
-        const tag = type === 'income' ? '[โอนเข้าออมฉุกเฉิน]' : '[ถอนจากออมฉุกเฉิน]';
-        finalNote = finalNote ? `${tag} ${finalNote}` : tag;
-        emergencyTransferNote = finalNote;
-    }
-
-    let finalCategory = categoryName;
-
-    if (dbOwner === 'shared-me') { dbOwner = 'shared'; finalNote = finalNote ? `[จ่ายโดย: me] ${finalNote}` : `[จ่ายโดย: me]`; }
-    else if (dbOwner === 'shared-partner') { dbOwner = 'shared'; finalNote = finalNote ? `[จ่ายโดย: partner] ${finalNote}` : `[จ่ายโดย: partner]`; }
-
-    const { error } = await supabaseClient
-        .from('transactions')
-        .insert([{
-            amount: finalAmount,
-            type: type,
-            category_name: finalCategory,
-            note: finalNote || null,
-            owner: dbOwner,
-            created_at: new Date().toISOString()
-        }]);
-
-    if (error) {
-        showToast(`บันทึกไม่สำเร็จ: ${error.message}`, '❌', true);
-    } else {
-        amountInput.value = ''; noteInput.value = ''; if (slipInput) slipInput.value = '';
-        window.currentSpendEmotion = '';
-        const emotionButtons = document.querySelectorAll('.emotion-btn');
-        emotionButtons.forEach(btn => btn.classList.remove('active'));
-        if (savingPurposeInput) {
-            savingPurposeInput.value = '';
-            document.getElementById('emergencyPurposeArea').classList.add('d-none');
-        }
-        if (previewArea) previewArea.classList.add('d-none');
-        ownerInput.value = currentUserRole === 'me' ? 'me' : 'partner';
-        showToast('จดบันทึกเรียบร้อยแล้วจ้า! 💰', '✅');
-        cancelSlipPreview();
-
-        // ฝาก/ถอนคู่กรณีเงินออมฉุกเฉิน
-        if (isEmergencyTransfer) {
-            const personalType = type === 'income' ? 'expense' : 'income';
-            await supabaseClient.from('transactions').insert([{
-                amount: finalAmount,
-                type: personalType,
-                category_name: 'ลงทุน',
-                note: emergencyTransferNote,
-                owner: currentUserRole,
-                created_at: new Date().toISOString()
-            }]);
-            const actionText = type === 'income' ? 'นำฝากเข้า' : 'ถอนออกจาก';
-            showToast(`${actionText}บัญชีออมและปรับเงินในกระเป๋าส่วนตัวเรียบร้อย! 🚨`, '🎯');
+        let dbOwner = ownerInput.value;
+        let finalNote = noteInput.value.trim();
+        if (type === 'expense' && window.currentSpendEmotion) {
+            finalNote = `[อารมณ์: ${window.currentSpendEmotion}] ${finalNote}`.trim();
         }
 
-        // หักออมอัตโนมัติ 10%
-        const autoSaveEnabled = localStorage.getItem('autoSaveEnabled') === 'true';
-        if (autoSaveEnabled && type === 'income' && (dbOwner === 'me' || dbOwner === 'partner')) {
-            const pct = parseInt(localStorage.getItem('autoSavePercent')) || 10;
-            const autoSaveAmt = parseFloat(((finalAmount * pct) / 100).toFixed(2));
-            if (autoSaveAmt > 0) {
-                const nameMe = localStorage.getItem('nameMe') || 'คุณโบ๊ท';
-                const namePartner = localStorage.getItem('namePartner') || 'คุณเอิร์น';
-                const ownerName = dbOwner === 'me' ? nameMe : namePartner;
-
-                // หักจ่ายส่วนตัว
-                const deductNote = `[หักออมอัตโนมัติ ${pct}%] ส่งเข้าบัญชีออมฉุกเฉิน`;
-                await supabaseClient.from('transactions').insert([{
-                    amount: autoSaveAmt,
-                    type: 'expense',
-                    category_name: 'ลงทุน',
-                    note: deductNote,
-                    owner: dbOwner,
-                    created_at: new Date().toISOString()
-                }]);
-
-                // โอนเข้าคลังออม
-                const addNote = `เงินออมอัตโนมัติ ${pct}% จากรายรับของ${ownerName}`;
-                await supabaseClient.from('transactions').insert([{
-                    amount: autoSaveAmt,
-                    type: 'income',
-                    category_name: 'ลงทุน',
-                    note: addNote,
-                    owner: 'emergency',
-                    created_at: new Date().toISOString()
-                }]);
-
-                showToast(`หักออมอัตโนมัติ ${pct}% (${autoSaveAmt.toLocaleString()} บ.) เข้าคลังเรียบร้อย! 🎯`, '🎯');
+        const savingPurposeInput = document.getElementById('txSavingPurpose');
+        if (dbOwner === 'emergency' && savingPurposeInput) {
+            const purposeVal = savingPurposeInput.value.trim();
+            if (purposeVal) {
+                finalNote = finalNote ? `[ออมเพื่อ: ${purposeVal}] ${finalNote}` : `[ออมเพื่อ: ${purposeVal}]`;
             }
         }
 
-        triggerCelebration();
-        await loadTransactions();
-    }
+        let isEmergencyTransfer = false;
+        let emergencyTransferNote = '';
+        if (dbOwner === 'emergency') {
+            isEmergencyTransfer = true;
+            const tag = type === 'income' ? '[โอนเข้าออมฉุกเฉิน]' : '[ถอนจากออมฉุกเฉิน]';
+            finalNote = finalNote ? `${tag} ${finalNote}` : tag;
+            emergencyTransferNote = finalNote;
+        }
 
-    setAllCategoryButtonsLoading(false);
+        let finalCategory = categoryName;
+
+        if (dbOwner === 'shared-me') { dbOwner = 'shared'; finalNote = finalNote ? `[จ่ายโดย: me] ${finalNote}` : `[จ่ายโดย: me]`; }
+        else if (dbOwner === 'shared-partner') { dbOwner = 'shared'; finalNote = finalNote ? `[จ่ายโดย: partner] ${finalNote}` : `[จ่ายโดย: partner]`; }
+
+        const { error } = await supabaseClient
+            .from('transactions')
+            .insert([{
+                amount: finalAmount,
+                type: type,
+                category_name: finalCategory,
+                note: finalNote || null,
+                owner: dbOwner,
+                created_at: new Date().toISOString()
+            }]);
+
+        if (error) {
+            showToast(`บันทึกไม่สำเร็จ: ${error.message}`, '❌', true);
+        } else {
+            amountInput.value = ''; noteInput.value = ''; if (slipInput) slipInput.value = '';
+            window.currentSpendEmotion = '';
+            const emotionButtons = document.querySelectorAll('.emotion-btn');
+            emotionButtons.forEach(btn => btn.classList.remove('active'));
+            if (savingPurposeInput) {
+                savingPurposeInput.value = '';
+                document.getElementById('emergencyPurposeArea').classList.add('d-none');
+            }
+            if (previewArea) previewArea.classList.add('d-none');
+            ownerInput.value = currentUserRole === 'me' ? 'me' : 'partner';
+            showToast('จดบันทึกเรียบร้อยแล้วจ้า! 💰', '✅');
+            cancelSlipPreview();
+
+            // ฝาก/ถอนคู่กรณีเงินออมฉุกเฉิน
+            if (isEmergencyTransfer) {
+                const personalType = type === 'income' ? 'expense' : 'income';
+                await supabaseClient.from('transactions').insert([{
+                    amount: finalAmount,
+                    type: personalType,
+                    category_name: 'ลงทุน',
+                    note: emergencyTransferNote,
+                    owner: currentUserRole,
+                    created_at: new Date().toISOString()
+                }]);
+                const actionText = type === 'income' ? 'นำฝากเข้า' : 'ถอนออกจาก';
+                showToast(`${actionText}บัญชีออมและปรับเงินในกระเป๋าส่วนตัวเรียบร้อย! 🚨`, '🎯');
+            }
+
+            // หักออมอัตโนมัติ 10%
+            const autoSaveEnabled = localStorage.getItem('autoSaveEnabled') === 'true';
+            if (autoSaveEnabled && type === 'income' && (dbOwner === 'me' || dbOwner === 'partner')) {
+                const pct = parseInt(localStorage.getItem('autoSavePercent')) || 10;
+                const autoSaveAmt = parseFloat(((finalAmount * pct) / 100).toFixed(2));
+                if (autoSaveAmt > 0) {
+                    const nameMe = localStorage.getItem('nameMe') || 'คุณโบ๊ท';
+                    const namePartner = localStorage.getItem('namePartner') || 'คุณเอิร์น';
+                    const ownerName = dbOwner === 'me' ? nameMe : namePartner;
+
+                    // หักจ่ายส่วนตัว
+                    const deductNote = `[หักออมอัตโนมัติ ${pct}%] ส่งเข้าบัญชีออมฉุกเฉิน`;
+                    await supabaseClient.from('transactions').insert([{
+                        amount: autoSaveAmt,
+                        type: 'expense',
+                        category_name: 'ลงทุน',
+                        note: deductNote,
+                        owner: dbOwner,
+                        created_at: new Date().toISOString()
+                    }]);
+
+                    // โอนเข้าคลังออม
+                    const addNote = `เงินออมอัตโนมัติ ${pct}% จากรายรับของ${ownerName}`;
+                    await supabaseClient.from('transactions').insert([{
+                        amount: autoSaveAmt,
+                        type: 'income',
+                        category_name: 'ลงทุน',
+                        note: addNote,
+                        owner: 'emergency',
+                        created_at: new Date().toISOString()
+                    }]);
+
+                    showToast(`หักออมอัตโนมัติ ${pct}% (${autoSaveAmt.toLocaleString()} บ.) เข้าคลังเรียบร้อย! 🎯`, '🎯');
+                }
+            }
+
+            triggerCelebration();
+            await loadTransactions();
+        }
+    } catch (err) {
+        console.error("Error in saveTransaction:", err);
+        showToast(`เกิดข้อผิดพลาดในการเชื่อมต่อระบบ: ${err.message}`, '❌', true);
+    } finally {
+        setAllCategoryButtonsLoading(false);
+    }
 }
 
 // Helper: ล็อกปุ่มป้องกันกดซ้ำ
@@ -1123,165 +1128,170 @@ async function submitEditTransaction() {
     const editBtn = document.querySelector('#editActionArea .btn-warning');
     if (editBtn) { editBtn.disabled = true; editBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> กำลังบันทึก...'; }
 
-    const id = document.getElementById('editTxId').value;
-    const amount = parseFloat(document.getElementById('txAmount').value);
-    const note = document.getElementById('txNote').value.trim();
-    const owner = document.getElementById('txOwner').value;
+    try {
+        const id = document.getElementById('editTxId').value;
+        const amount = parseFloat(document.getElementById('txAmount').value);
+        const note = document.getElementById('txNote').value.trim();
+        const owner = document.getElementById('txOwner').value;
 
-    if (!owner) { if (editBtn) { editBtn.disabled = false; editBtn.innerHTML = '💾 บันทึกการแก้ไข'; } return showToast('กรุณาเลือกกระเป๋าเงินด้วยครับ', '⚠️', true); }
-    if (isNaN(amount) || amount <= 0) { if (editBtn) { editBtn.disabled = false; editBtn.innerHTML = '💾 บันทึกการแก้ไข'; } return showToast('กรุณากรอกยอดเงินให้ถูกต้อง', '🔢', true); }
-    const finalAmount = parseFloat(amount.toFixed(2));
+        if (!owner) { return showToast('กรุณาเลือกกระเป๋าเงินด้วยครับ', '⚠️', true); }
+        if (isNaN(amount) || amount <= 0) { return showToast('กรุณากรอกยอดเงินให้ถูกต้อง', '🔢', true); }
+        const finalAmount = parseFloat(amount.toFixed(2));
 
-    const { data: currentTx } = await supabaseClient.from('transactions').select('note, amount, category_name, owner, type').eq('id', id).single();
-    let fileToDelete = null;
-    let oldNote = '';
-    let oldAmount = 0;
-    if (currentTx) {
-        oldNote = currentTx.note || '';
-        oldAmount = currentTx.amount || 0;
-        if (currentTx.note && currentTx.note.includes('[SLIP_URL:')) {
-            const match = currentTx.note.match(/\[SLIP_URL:(.*?)\]/);
-            if (match && match[1]) fileToDelete = match[1];
-        }
-    }
-
-    let dbOwner = owner;
-    let finalNote = note;
-
-    const savingPurposeInput = document.getElementById('txSavingPurpose');
-    if (dbOwner === 'emergency' && savingPurposeInput) {
-        const purposeVal = savingPurposeInput.value.trim();
-        if (purposeVal) {
-            finalNote = finalNote ? `[ออมเพื่อ: ${purposeVal}] ${finalNote}` : `[ออมเพื่อ: ${purposeVal}]`;
-        }
-    }
-
-    const oldOwner = currentTx ? currentTx.owner : null;
-    const oldType = currentTx ? currentTx.type : null;
-    const wasEmergencyTransfer = (oldNote && (oldNote.includes('[โอนเข้าออมฉุกเฉิน]') || oldNote.includes('[ถอนจากออมฉุกเฉิน]')));
-
-    if (!wasEmergencyTransfer && dbOwner === 'emergency') {
-        const tag = oldType === 'income' ? '[โอนเข้าออมฉุกเฉิน]' : '[ถอนจากออมฉุกเฉิน]';
-        if (!finalNote.includes(tag)) {
-            finalNote = finalNote ? `${tag} ${finalNote}` : tag;
-        }
-    }
-
-    if (dbOwner === 'shared-me') { dbOwner = 'shared'; finalNote = finalNote ? `[จ่ายโดย: me] ${finalNote}` : `[จ่ายโดย: me]`; }
-    else if (dbOwner === 'shared-partner') { dbOwner = 'shared'; finalNote = finalNote ? `[จ่ายโดย: partner] ${finalNote}` : `[จ่ายโดย: partner]`; }
-
-    const txCategorySelect = document.getElementById('txCategory');
-    let finalCategory = txCategorySelect ? txCategorySelect.value : (currentTx ? currentTx.category_name : 'ทั่วไป');
-
-    if (dbOwner === 'emergency') {
-        finalCategory = 'ลงทุน';
-    }
-
-    if (finalCategory === "สลิปรอระบุหมวดหมู่" && !finalNote.includes('[SLIP_URL:')) {
-        finalCategory = "ทั่วไป";
-    }
-
-    const { error: updateError } = await supabaseClient
-        .from('transactions')
-        .update({ amount: finalAmount, note: finalNote || null, owner: dbOwner, category_name: finalCategory })
-        .eq('id', id);
-
-    if (updateError) {
-        showToast(`แก้ไขล้มเหลว: ${updateError.message}`, '❌', true);
-    } else {
-        if (fileToDelete && !finalNote.includes('[SLIP_URL:')) {
-            await supabaseClient.storage.from('slips').remove([fileToDelete]);
-            console.log(`[Storage Purged] ลบรูปสลิป ${fileToDelete} ออกจากระบบ Storage สำเร็จ`);
+        const { data: currentTx } = await supabaseClient.from('transactions').select('note, amount, category_name, owner, type').eq('id', id).single();
+        let fileToDelete = null;
+        let oldNote = '';
+        let oldAmount = 0;
+        if (currentTx) {
+            oldNote = currentTx.note || '';
+            oldAmount = currentTx.amount || 0;
+            if (currentTx.note && currentTx.note.includes('[SLIP_URL:')) {
+                const match = currentTx.note.match(/\[SLIP_URL:(.*?)\]/);
+                if (match && match[1]) fileToDelete = match[1];
+            }
         }
 
-        // จัดการและอัปเดตคู่โอนเงิน
-        if (wasEmergencyTransfer) {
-            let isBroken = false;
-            if (oldOwner === 'emergency' && dbOwner !== 'emergency') {
-                isBroken = true;
-            } else if ((oldOwner === 'me' || oldOwner === 'partner') && (dbOwner === 'emergency' || dbOwner === 'shared')) {
-                isBroken = true;
+        let dbOwner = owner;
+        let finalNote = note;
+
+        const savingPurposeInput = document.getElementById('txSavingPurpose');
+        if (dbOwner === 'emergency' && savingPurposeInput) {
+            const purposeVal = savingPurposeInput.value.trim();
+            if (purposeVal) {
+                finalNote = finalNote ? `[ออมเพื่อ: ${purposeVal}] ${finalNote}` : `[ออมเพื่อ: ${purposeVal}]`;
+            }
+        }
+
+        const oldOwner = currentTx ? currentTx.owner : null;
+        const oldType = currentTx ? currentTx.type : null;
+        const wasEmergencyTransfer = (oldNote && (oldNote.includes('[โอนเข้าออมฉุกเฉิน]') || oldNote.includes('[ถอนจากออมฉุกเฉิน]')));
+
+        if (!wasEmergencyTransfer && dbOwner === 'emergency') {
+            const tag = oldType === 'income' ? '[โอนเข้าออมฉุกเฉิน]' : '[ถอนจากออมฉุกเฉิน]';
+            if (!finalNote.includes(tag)) {
+                finalNote = finalNote ? `${tag} ${finalNote}` : tag;
+            }
+        }
+
+        if (dbOwner === 'shared-me') { dbOwner = 'shared'; finalNote = finalNote ? `[จ่ายโดย: me] ${finalNote}` : `[จ่ายโดย: me]`; }
+        else if (dbOwner === 'shared-partner') { dbOwner = 'shared'; finalNote = finalNote ? `[จ่ายโดย: partner] ${finalNote}` : `[จ่ายโดย: partner]`; }
+
+        const txCategorySelect = document.getElementById('txCategory');
+        let finalCategory = txCategorySelect ? txCategorySelect.value : (currentTx ? currentTx.category_name : 'ทั่วไป');
+
+        if (dbOwner === 'emergency') {
+            finalCategory = 'ลงทุน';
+        }
+
+        if (finalCategory === "สลิปรอระบุหมวดหมู่" && !finalNote.includes('[SLIP_URL:')) {
+            finalCategory = "ทั่วไป";
+        }
+
+        const { error: updateError } = await supabaseClient
+            .from('transactions')
+            .update({ amount: finalAmount, note: finalNote || null, owner: dbOwner, category_name: finalCategory })
+            .eq('id', id);
+
+        if (updateError) {
+            showToast(`แก้ไขล้มเหลว: ${updateError.message}`, '❌', true);
+        } else {
+            if (fileToDelete && !finalNote.includes('[SLIP_URL:')) {
+                await supabaseClient.storage.from('slips').remove([fileToDelete]);
+                console.log(`[Storage Purged] ลบรูปสลิป ${fileToDelete} ออกจากระบบ Storage สำเร็จ`);
             }
 
-            if (isBroken) {
-                await supabaseClient.from('transactions').delete().eq('note', oldNote).eq('amount', oldAmount).neq('id', id);
-                console.log("[Transfer Sync] Paired transaction deleted due to category conflict.");
-            } else {
-                let tag = oldNote.includes('[โอนเข้าออมฉุกเฉิน]') ? '[โอนเข้าออมฉุกเฉิน]' : '[ถอนจากออมฉุกเฉิน]';
-                let cleanNewNote = finalNote.replace(/\[โอนเข้าออมฉุกเฉิน\]\s*/, '').replace(/\[ถอนจากออมฉุกเฉิน\]\s*/, '');
-                let newNoteWithTag = cleanNewNote ? `${tag} ${cleanNewNote}` : tag;
+            // จัดการและอัปเดตคู่โอนเงิน
+            if (wasEmergencyTransfer) {
+                let isBroken = false;
+                if (oldOwner === 'emergency' && dbOwner !== 'emergency') {
+                    isBroken = true;
+                } else if ((oldOwner === 'me' || oldOwner === 'partner') && (dbOwner === 'emergency' || dbOwner === 'shared')) {
+                    isBroken = true;
+                }
 
-                await supabaseClient.from('transactions').update({ amount: finalAmount, note: newNoteWithTag }).eq('note', oldNote).eq('amount', oldAmount).neq('id', id);
-            }
-        } else if (oldNote && (oldNote.startsWith('[หักเงินออมภารกิจ] ') || oldNote.startsWith('ภารกิจสำเร็จ: '))) {
-            // จัดการอัปเดตคู่โอนภารกิจ
-            if (oldNote.startsWith('[หักเงินออมภารกิจ] ')) {
-                const oldTitle = oldNote.substring('[หักเงินออมภารกิจ] '.length);
-                const newTitle = finalNote.startsWith('[หักเงินออมภารกิจ] ') ? finalNote.substring('[หักเงินออมภารกิจ] '.length) : finalNote;
-                const counterpartOldNote = `ภารกิจสำเร็จ: ${oldTitle}`;
-                const counterpartNewNote = `ภารกิจสำเร็จ: ${newTitle}`;
+                if (isBroken) {
+                    await supabaseClient.from('transactions').delete().eq('note', oldNote).eq('amount', oldAmount).neq('id', id);
+                    console.log("[Transfer Sync] Paired transaction deleted due to category conflict.");
+                } else {
+                    let tag = oldNote.includes('[โอนเข้าออมฉุกเฉิน]') ? '[โอนเข้าออมฉุกเฉิน]' : '[ถอนจากออมฉุกเฉิน]';
+                    let cleanNewNote = finalNote.replace(/\[โอนเข้าออมฉุกเฉิน\]\s*/, '').replace(/\[ถอนจากออมฉุกเฉิน\]\s*/, '');
+                    let newNoteWithTag = cleanNewNote ? `${tag} ${cleanNewNote}` : tag;
 
-                await supabaseClient.from('transactions').update({ amount: finalAmount, note: counterpartNewNote }).eq('note', counterpartOldNote).eq('amount', oldAmount).neq('id', id);
-            } else if (oldNote.startsWith('ภารกิจสำเร็จ: ')) {
-                const oldTitle = oldNote.substring('ภารกิจสำเร็จ: '.length);
-                const newTitle = finalNote.startsWith('ภารกิจสำเร็จ: ') ? finalNote.substring('ภารกิจสำเร็จ: '.length) : finalNote;
-                const counterpartOldNote = `[หักเงินออมภารกิจ] ${oldTitle}`;
-                const counterpartNewNote = `[หักเงินออมภารกิจ] ${newTitle}`;
+                    await supabaseClient.from('transactions').update({ amount: finalAmount, note: newNoteWithTag }).eq('note', oldNote).eq('amount', oldAmount).neq('id', id);
+                }
+            } else if (oldNote && (oldNote.startsWith('[หักเงินออมภารกิจ] ') || oldNote.startsWith('ภารกิจสำเร็จ: '))) {
+                // จัดการอัปเดตคู่โอนภารกิจ
+                if (oldNote.startsWith('[หักเงินออมภารกิจ] ')) {
+                    const oldTitle = oldNote.substring('[หักเงินออมภารกิจ] '.length);
+                    const newTitle = finalNote.startsWith('[หักเงินออมภารกิจ] ') ? finalNote.substring('[หักเงินออมภารกิจ] '.length) : finalNote;
+                    const counterpartOldNote = `ภารกิจสำเร็จ: ${oldTitle}`;
+                    const counterpartNewNote = `ภารกิจสำเร็จ: ${newTitle}`;
 
-                await supabaseClient.from('transactions').update({ amount: finalAmount, note: counterpartNewNote }).eq('note', counterpartOldNote).eq('amount', oldAmount).neq('id', id);
-            }
-        } else if (oldNote && (oldNote.startsWith('[หักออมอัตโนมัติ ') || oldNote.startsWith('เงินออมอัตโนมัติ '))) {
-            // จัดการคู่หักออมอัตโนมัติ
-            const matchOldDeduct = oldNote.match(/^\[หักออมอัตโนมัติ\s*(\d+)%\]\s*ส่งเข้าบัญชีออมฉุกเฉิน/);
-            if (matchOldDeduct) {
-                const pct = matchOldDeduct[1];
-                const matchNewDeduct = finalNote.match(/^\[หักออมอัตโนมัติ\s*(\d+)%\]\s*ส่งเข้าบัญชีออมฉุกเฉิน/);
-                const newPct = matchNewDeduct ? matchNewDeduct[1] : pct;
+                    await supabaseClient.from('transactions').update({ amount: finalAmount, note: counterpartNewNote }).eq('note', counterpartOldNote).eq('amount', oldAmount).neq('id', id);
+                } else if (oldNote.startsWith('ภารกิจสำเร็จ: ')) {
+                    const oldTitle = oldNote.substring('ภารกิจสำเร็จ: '.length);
+                    const newTitle = finalNote.startsWith('ภารกิจสำเร็จ: ') ? finalNote.substring('ภารกิจสำเร็จ: '.length) : finalNote;
+                    const counterpartOldNote = `[หักเงินออมภารกิจ] ${oldTitle}`;
+                    const counterpartNewNote = `[หักเงินออมภารกิจ] ${newTitle}`;
 
-                const { data: pairedTxs } = await supabaseClient.from('transactions').select('id, note').eq('amount', oldAmount).neq('id', id);
-                if (pairedTxs) {
-                    const counterpart = pairedTxs.find(tx => tx.note && tx.note.startsWith(`เงินออมอัตโนมัติ ${pct}% จากรายรับของ`));
-                    if (counterpart) {
-                        const ownerNameMatch = counterpart.note.match(/จากรายรับของ(.*)$/);
-                        const ownerName = ownerNameMatch ? ownerNameMatch[1] : '';
-                        const newCounterpartNote = `เงินออมอัตโนมัติ ${newPct}% จากรายรับของ${ownerName}`;
-                        await supabaseClient.from('transactions').update({ amount: finalAmount, note: newCounterpartNote }).eq('id', counterpart.id);
+                    await supabaseClient.from('transactions').update({ amount: finalAmount, note: counterpartNewNote }).eq('note', counterpartOldNote).eq('amount', oldAmount).neq('id', id);
+                }
+            } else if (oldNote && (oldNote.startsWith('[หักออมอัตโนมัติ ') || oldNote.startsWith('เงินออมอัตโนมัติ '))) {
+                // จัดการคู่หักออมอัตโนมัติ
+                const matchOldDeduct = oldNote.match(/^\[หักออมอัตโนมัติ\s*(\d+)%\]\s*ส่งเข้าบัญชีออมฉุกเฉิน/);
+                if (matchOldDeduct) {
+                    const pct = matchOldDeduct[1];
+                    const matchNewDeduct = finalNote.match(/^\[หักออมอัตโนมัติ\s*(\d+)%\]\s*ส่งเข้าบัญชีออมฉุกเฉิน/);
+                    const newPct = matchNewDeduct ? matchNewDeduct[1] : pct;
+
+                    const { data: pairedTxs } = await supabaseClient.from('transactions').select('id, note').eq('amount', oldAmount).neq('id', id);
+                    if (pairedTxs) {
+                        const counterpart = pairedTxs.find(tx => tx.note && tx.note.startsWith(`เงินออมอัตโนมัติ ${pct}% จากรายรับของ`));
+                        if (counterpart) {
+                            const ownerNameMatch = counterpart.note.match(/จากรายรับของ(.*)$/);
+                            const ownerName = ownerNameMatch ? ownerNameMatch[1] : '';
+                            const newCounterpartNote = `เงินออมอัตโนมัติ ${newPct}% จากรายรับของ${ownerName}`;
+                            await supabaseClient.from('transactions').update({ amount: finalAmount, note: newCounterpartNote }).eq('id', counterpart.id);
+                        }
                     }
+                }
+
+                const matchOldAdd = oldNote.match(/^เงินออมอัตโนมัติ\s*(\d+)%\s*จากรายรับของ/);
+                if (matchOldAdd) {
+                    const pct = matchOldAdd[1];
+                    const matchNewAdd = finalNote.match(/^เงินออมอัตโนมัติ\s*(\d+)%\s*จากรายรับของ/);
+                    const newPct = matchNewAdd ? matchNewAdd[1] : pct;
+
+                    const counterpartOldNote = `[หักออมอัตโนมัติ ${pct}%] ส่งเข้าบัญชีออมฉุกเฉิน`;
+                    const counterpartNewNote = `[หักออมอัตโนมัติ ${newPct}%] ส่งเข้าบัญชีออมฉุกเฉิน`;
+
+                    await supabaseClient.from('transactions').update({ amount: finalAmount, note: counterpartNewNote }).eq('note', counterpartOldNote).eq('amount', oldAmount).neq('id', id);
+                }
+            } else {
+                if (dbOwner === 'emergency') {
+                    const personalType = oldType === 'income' ? 'expense' : 'income';
+                    await supabaseClient.from('transactions').insert([{
+                        amount: finalAmount,
+                        type: personalType,
+                        category_name: 'ลงทุน',
+                        note: finalNote,
+                        owner: currentUserRole,
+                        created_at: new Date().toISOString()
+                    }]);
                 }
             }
 
-            const matchOldAdd = oldNote.match(/^เงินออมอัตโนมัติ\s*(\d+)%\s*จากรายรับของ/);
-            if (matchOldAdd) {
-                const pct = matchOldAdd[1];
-                const matchNewAdd = finalNote.match(/^เงินออมอัตโนมัติ\s*(\d+)%\s*จากรายรับของ/);
-                const newPct = matchNewAdd ? matchNewAdd[1] : pct;
-
-                const counterpartOldNote = `[หักออมอัตโนมัติ ${pct}%] ส่งเข้าบัญชีออมฉุกเฉิน`;
-                const counterpartNewNote = `[หักออมอัตโนมัติ ${newPct}%] ส่งเข้าบัญชีออมฉุกเฉิน`;
-
-                await supabaseClient.from('transactions').update({ amount: finalAmount, note: counterpartNewNote }).eq('note', counterpartOldNote).eq('amount', oldAmount).neq('id', id);
-            }
-        } else {
-            if (dbOwner === 'emergency') {
-                const personalType = oldType === 'income' ? 'expense' : 'income';
-                await supabaseClient.from('transactions').insert([{
-                    amount: finalAmount,
-                    type: personalType,
-                    category_name: 'ลงทุน',
-                    note: finalNote,
-                    owner: currentUserRole,
-                    created_at: new Date().toISOString()
-                }]);
-            }
+            cancelEditMode();
+            showToast('อัปเดตข้อมูลและปรับยอดกระเป๋าเงินคู่โอนเรียบร้อยแล้วจ้า!', '💾');
+            triggerCelebration();
+            await loadTransactions();
         }
-
-        cancelEditMode();
-        showToast('อัปเดตข้อมูลและปรับยอดกระเป๋าเงินคู่โอนเรียบร้อยแล้วจ้า!', '💾');
-        triggerCelebration();
-        await loadTransactions();
+    } catch (err) {
+        console.error("Error in submitEditTransaction:", err);
+        showToast(`เกิดข้อผิดพลาดในการเชื่อมต่อระบบ: ${err.message}`, '❌', true);
+    } finally {
+        if (editBtn) { editBtn.disabled = false; editBtn.innerHTML = '💾 บันทึกการแก้ไข'; }
     }
-
-    if (editBtn) { editBtn.disabled = false; editBtn.innerHTML = '💾 บันทึกการแก้ไข'; }
 }
 
 // 5. ลบแถวรายการข้อมูลออกจากฐานข้อมูล
@@ -1291,58 +1301,65 @@ async function deleteTransaction(id) {
     const deleteBtn = document.querySelector(`[data-delete-id="${id}"]`);
     if (deleteBtn) { deleteBtn.disabled = true; deleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>'; }
 
-    const { data: currentTx } = await supabaseClient.from('transactions').select('note, amount').eq('id', id).single();
-    if (currentTx) {
-        if (currentTx.note && currentTx.note.includes('[SLIP_URL:')) {
-            const match = currentTx.note.match(/\[SLIP_URL:(.*?)\]/);
-            if (match && match[1]) await supabaseClient.storage.from('slips').remove([match[1]]);
-        }
-
-        // 1. ลบคู่โอนฉุกเฉิน
-        if (currentTx.note && (currentTx.note.includes('[โอนเข้าออมฉุกเฉิน]') || currentTx.note.includes('[ถอนจากออมฉุกเฉิน]'))) {
-            await supabaseClient.from('transactions').delete().eq('note', currentTx.note).eq('amount', currentTx.amount);
-        }
-
-        // 2. ลบคู่โอนภารกิจการเงิน
-        if (currentTx.note) {
-            if (currentTx.note.startsWith('[หักเงินออมภารกิจ] ')) {
-                const title = currentTx.note.substring('[หักเงินออมภารกิจ] '.length);
-                await supabaseClient.from('transactions').delete().eq('note', `ภารกิจสำเร็จ: ${title}`).eq('amount', currentTx.amount);
-            } else if (currentTx.note.startsWith('ภารกิจสำเร็จ: ')) {
-                const title = currentTx.note.substring('ภารกิจสำเร็จ: '.length);
-                await supabaseClient.from('transactions').delete().eq('note', `[หักเงินออมภารกิจ] ${title}`).eq('amount', currentTx.amount);
+    try {
+        const { data: currentTx } = await supabaseClient.from('transactions').select('note, amount').eq('id', id).single();
+        if (currentTx) {
+            if (currentTx.note && currentTx.note.includes('[SLIP_URL:')) {
+                const match = currentTx.note.match(/\[SLIP_URL:(.*?)\]/);
+                if (match && match[1]) await supabaseClient.storage.from('slips').remove([match[1]]);
             }
-        }
 
-        // 3. ลบคู่หักออมอัตโนมัติ
-        if (currentTx.note) {
-            const matchDeduct = currentTx.note.match(/^\[หักออมอัตโนมัติ\s*(\d+)%\]\s*ส่งเข้าบัญชีออมฉุกเฉิน/);
-            if (matchDeduct) {
-                const pct = matchDeduct[1];
-                const { data: pairedTxs } = await supabaseClient.from('transactions').select('id, note').eq('amount', currentTx.amount);
-                if (pairedTxs) {
-                    const toDelete = pairedTxs.filter(tx => tx.note && tx.note.startsWith(`เงินออมอัตโนมัติ ${pct}% จากรายรับของ`));
-                    if (toDelete.length > 0) {
-                        const deleteIds = toDelete.map(tx => tx.id);
-                        await supabaseClient.from('transactions').delete().in('id', deleteIds);
-                    }
+            // 1. ลบคู่โอนฉุกเฉิน
+            if (currentTx.note && (currentTx.note.includes('[โอนเข้าออมฉุกเฉิน]') || currentTx.note.includes('[ถอนจากออมฉุกเฉิน]'))) {
+                await supabaseClient.from('transactions').delete().eq('note', currentTx.note).eq('amount', currentTx.amount);
+            }
+
+            // 2. ลบคู่โอนภารกิจการเงิน
+            if (currentTx.note) {
+                if (currentTx.note.startsWith('[หักเงินออมภารกิจ] ')) {
+                    const title = currentTx.note.substring('[หักเงินออมภารกิจ] '.length);
+                    await supabaseClient.from('transactions').delete().eq('note', `ภารกิจสำเร็จ: ${title}`).eq('amount', currentTx.amount);
+                } else if (currentTx.note.startsWith('ภารกิจสำเร็จ: ')) {
+                    const title = currentTx.note.substring('ภารกิจสำเร็จ: '.length);
+                    await supabaseClient.from('transactions').delete().eq('note', `[หักเงินออมภารกิจ] ${title}`).eq('amount', currentTx.amount);
                 }
             }
 
-            const matchAdd = currentTx.note.match(/^เงินออมอัตโนมัติ\s*(\d+)%\s*จากรายรับของ/);
-            if (matchAdd) {
-                const pct = matchAdd[1];
-                await supabaseClient.from('transactions').delete().eq('note', `[หักออมอัตโนมัติ ${pct}%] ส่งเข้าบัญชีออมฉุกเฉิน`).eq('amount', currentTx.amount);
+            // 3. ลบคู่หักออมอัตโนมัติ
+            if (currentTx.note) {
+                const matchDeduct = currentTx.note.match(/^\[หักออมอัตโนมัติ\s*(\d+)%\]\s*ส่งเข้าบัญชีออมฉุกเฉิน/);
+                if (matchDeduct) {
+                    const pct = matchDeduct[1];
+                    const { data: pairedTxs } = await supabaseClient.from('transactions').select('id, note').eq('amount', currentTx.amount);
+                    if (pairedTxs) {
+                        const toDelete = pairedTxs.filter(tx => tx.note && tx.note.startsWith(`เงินออมอัตโนมัติ ${pct}% จากรายรับของ`));
+                        if (toDelete.length > 0) {
+                            const deleteIds = toDelete.map(tx => tx.id);
+                            await supabaseClient.from('transactions').delete().in('id', deleteIds);
+                        }
+                    }
+                }
+
+                const matchAdd = currentTx.note.match(/^เงินออมอัตโนมัติ\s*(\d+)%\s*จากรายรับของ/);
+                if (matchAdd) {
+                    const pct = matchAdd[1];
+                    await supabaseClient.from('transactions').delete().eq('note', `[หักออมอัตโนมัติ ${pct}%] ส่งเข้าบัญชีออมฉุกเฉิน`).eq('amount', currentTx.amount);
+                }
             }
         }
-    }
 
-    const { error } = await supabaseClient.from('transactions').delete().eq('id', id);
-    if (error) {
-        showToast(`ลบไม่สำเร็จ: ${error.message}`, '❌', true);
-    } else {
-        showToast('ลบรายการเงินทิ้งเรียบร้อย', '🗑️');
-        await loadTransactions();
+        const { error } = await supabaseClient.from('transactions').delete().eq('id', id);
+        if (error) {
+            showToast(`ลบไม่สำเร็จ: ${error.message}`, '❌', true);
+            if (deleteBtn) { deleteBtn.disabled = false; deleteBtn.innerHTML = '<i class="bi bi-trash-fill"></i>'; }
+        } else {
+            showToast('ลบรายการเงินทิ้งเรียบร้อย', '🗑️');
+            await loadTransactions();
+        }
+    } catch (err) {
+        console.error("Error in deleteTransaction:", err);
+        showToast(`เกิดข้อผิดพลาดในการลบรายการ: ${err.message}`, '❌', true);
+        if (deleteBtn) { deleteBtn.disabled = false; deleteBtn.innerHTML = '<i class="bi bi-trash-fill"></i>'; }
     }
 }
 
@@ -1352,6 +1369,10 @@ async function createNewGoalFrontend() {
     const titleInput = document.getElementById('newGoalTitle'); const amountInput = document.getElementById('newGoalAmount'); const typeInput = document.getElementById('newGoalType');
     const title = titleInput.value.trim(); const amount = parseFloat(amountInput.value);
     if (!title || isNaN(amount) || amount <= 0) return showToast('กรุณากรอกชื่อเควสและยอดเงินตั้งเป้าหมายให้ถูกต้องครับ', '⚠️', true);
+
+    const btn = document.querySelector('button[onclick="createNewGoalFrontend()"]');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> กำลังบันทึก...'; }
+
     const now = new Date(); const targetMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
     let dbType = typeInput.value;
@@ -1361,15 +1382,22 @@ async function createNewGoalFrontend() {
         dbType = 'save';
     }
 
-    const { error } = await supabaseClient.from('goals').insert([{ title: dbTitle, amount: amount, type: dbType, goal_month: targetMonthStr, is_completed: false, is_failed: false }]);
-    if (error) {
-        showToast(`เพิ่มภารกิจล้มเหลว: ${error.message}`, '❌', true);
-    } else {
-        titleInput.value = ''; amountInput.value = '';
-        localStorage.setItem(`defaultGoalsCreated_${targetMonthStr}`, 'true');
-        showToast('เพิ่มภารกิจลงหน้าจอสำเร็จแล้ว!', '➕');
-        triggerCelebration();
-        await loadGoals();
+    try {
+        const { error } = await supabaseClient.from('goals').insert([{ title: dbTitle, amount: amount, type: dbType, goal_month: targetMonthStr, is_completed: false, is_failed: false }]);
+        if (error) {
+            showToast(`เพิ่มภารกิจล้มเหลว: ${error.message}`, '❌', true);
+        } else {
+            titleInput.value = ''; amountInput.value = '';
+            localStorage.setItem(`defaultGoalsCreated_${targetMonthStr}`, 'true');
+            showToast('เพิ่มภารกิจลงหน้าจอสำเร็จแล้ว!', '➕');
+            triggerCelebration();
+            await loadGoals();
+        }
+    } catch (err) {
+        console.error("Error in createNewGoalFrontend:", err);
+        showToast(`เกิดข้อผิดพลาดในการเชื่อมต่อระบบ: ${err.message}`, '❌', true);
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '➕ เพิ่มภารกิจลงหน้าจอ'; }
     }
 }
 
@@ -2096,6 +2124,9 @@ async function saveSplitBill() {
 
     if (!(await showCustomConfirm(`ต้องการบันทึกค่าใช้จ่าย "${title}" ยอดเงิน ${amount.toLocaleString()} บ. (สัดส่วน โบ๊ท ${mePct}% : เอิร์น ${partnerPct}%) เข้ากองกลาง?`, 'บันทึกค่าใช้จ่ายกองกลาง', '🤝'))) return;
 
+    const btn = document.querySelector('button[onclick="saveSplitBill()"]');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> กำลังบันทึก...'; }
+
     let prefix = payer === "me" ? "[จ่ายโดย: me]" : "[จ่ายโดย: partner]";
     let finalNote = `${prefix} [หารค่าใช้จ่าย] ${title} (สัดส่วน โบ๊ท ${mePct}% : เอิร์น ${partnerPct}%)`;
 
@@ -2117,10 +2148,12 @@ async function saveSplitBill() {
         document.getElementById("splitTitle").value = "";
         document.getElementById("splitAmount").value = "";
         calculateSplitResult();
-        loadTransactions();
+        await loadTransactions();
     } catch (err) {
         console.error("Error saving split transaction:", err);
         showToast(`เกิดข้อผิดพลาดในการบันทึกข้อมูล: ${err.message}`, "❌", true);
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '🤝 บันทึกเข้ากองกลาง Supabase'; }
     }
 }
 

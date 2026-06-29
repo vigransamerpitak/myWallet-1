@@ -1,6 +1,6 @@
 // service-worker.js - แคชไฟล์ JavaScript ย่อยและองค์ประกอบ PWA ให้สามารถรันออฟไลน์ได้สมบูรณ์
 
-const CACHE_NAME = 'wallet-app-v5'; 
+const CACHE_NAME = 'wallet-app-v6'; 
 const ASSETS = [
     '/',
     'index.html',
