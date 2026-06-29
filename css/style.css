@@ -293,13 +293,14 @@ body {
 
 .preset-btn {
     border-radius: 12px !important;
-    font-size: 0.78rem !important;
-    padding: 5px 12px !important;
+    font-size: 0.85rem !important;
+    padding: 8px 16px !important;
     border: 1px solid var(--card-border) !important;
     color: var(--color-text-muted) !important;
     background-color: var(--light-bg);
     transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
     font-weight: 600;
+    min-height: 40px;
 }
 
 .preset-btn:hover {
@@ -967,8 +968,8 @@ html, body, .overflow-y-auto, #savingsJarsContainer, #goalsList, #recurringBills
 
 /* Sleek Low-Profile Ledger Buttons */
 .btn-icon {
-    width: 32px;
-    height: 32px;
+    width: 44px !important;
+    height: 44px !important;
     border-radius: 50% !important;
     display: inline-flex;
     align-items: center;
@@ -976,7 +977,7 @@ html, body, .overflow-y-auto, #savingsJarsContainer, #goalsList, #recurringBills
     border: 1px solid var(--card-border) !important;
     background-color: var(--light-bg);
     color: var(--color-text-muted) !important;
-    font-size: 0.85rem;
+    font-size: 0.95rem;
     transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
     padding: 0 !important;
 }
@@ -995,4 +996,42 @@ html, body, .overflow-y-auto, #savingsJarsContainer, #goalsList, #recurringBills
     background-color: rgba(244, 63, 94, 0.08) !important;
     border-color: #f43f5e !important;
     color: #f43f5e !important;
+}
+
+/* 📱 Mobile Responsive Improvements */
+@media (max-width: 576px) {
+    .header-bar {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+        padding: 1rem !important;
+    }
+    
+    .header-bar > div {
+        width: 100%;
+        justify-content: space-between;
+        display: flex;
+        align-items: center;
+    }
+
+    /* Stack wallet cards vertically on small screens to prevent layout overflow and truncation */
+    .row.mb-4 > .col-6 {
+        width: 100% !important;
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .balance-card {
+        margin-bottom: 0.5rem;
+    }
+
+    /* Touch target expansion for tiny buttons on mobile */
+    .btn-xs {
+        padding: 6px 12px !important;
+        font-size: 0.8rem !important;
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
 }
