@@ -830,13 +830,15 @@ async function loadTransactions() {
                 ${emotion ? `<span class="badge bg-light text-dark rounded-pill border me-1">${emotion}</span>` : ''}
                 ${displayNoteText || '-'}
             </td>
-            <td class="text-center whitespace-nowrap">
-                <button onclick="enterEditMode(${tx.id}, ${txAmount}, '${safeNote}', '${safeOwner}', '${safeCategory}')" class="btn btn-icon btn-edit cursor-pointer me-2" title="แก้ไขรายการ">
-                    <i class="bi bi-pencil-fill"></i>
-                </button>
-                <button onclick="deleteTransaction(${tx.id})" data-delete-id="${tx.id}" class="btn btn-icon btn-delete cursor-pointer" title="ลบรายการ">
-                    <i class="bi bi-trash-fill"></i>
-                </button>
+            <td class="text-center">
+                <div class="d-flex justify-content-center gap-2">
+                    <button onclick="enterEditMode(${tx.id}, ${txAmount}, '${safeNote}', '${safeOwner}', '${safeCategory}')" class="btn btn-icon btn-edit cursor-pointer" title="แก้ไขรายการ">
+                        <i class="bi bi-pencil-fill"></i>
+                    </button>
+                    <button onclick="deleteTransaction(${tx.id})" data-delete-id="${tx.id}" class="btn btn-icon btn-delete cursor-pointer" title="ลบรายการ">
+                        <i class="bi bi-trash-fill"></i>
+                    </button>
+                </div>
             </td>
         `;
         tbody.appendChild(row);
