@@ -828,7 +828,7 @@ async function loadTransactions() {
             <td class="fw-bold">${formatBaht(txAmount)}</td>
             <td class="text-muted small">
                 ${emotion ? `<span class="badge bg-light text-dark rounded-pill border me-1">${emotion}</span>` : ''}
-                ${displayNoteText || '-'}
+                ${escapeForAttr(displayNoteText) || '-'}
             </td>
             <td class="text-center">
                 <div class="d-flex justify-content-center gap-2">
@@ -1483,7 +1483,7 @@ async function loadGoals() {
         div.innerHTML = `
             <div class="text-truncate me-2">
                 <span class="${goal.is_completed ? 'text-decoration-line-through text-muted' : goal.is_failed ? 'text-decoration-line-through text-black-50 font-normal' : 'fw-semibold text-dark'}">
-                    ${getGoalIcon(goalType)} ${goalTitle}
+                    ${getGoalIcon(goalType)} ${safeTitle}
                 </span>
             </div>
             <div class="d-flex align-items-center gap-2 shrink-0">
@@ -1797,10 +1797,11 @@ function renderRecurringBills() {
             actionHTML = `<button onclick="payBill(${idx})" class="btn btn-success btn-xs py-1 px-2.5 fw-bold cursor-pointer rounded-pill shadow-xs">💳 จ่ายแล้ว</button>`;
         }
 
+        const safeBillTitle = escapeForAttr(bill.title);
         row.innerHTML = `
             <div class="text-truncate me-2" style="max-width: 65%;">
                 <span class="fw-bold text-dark d-flex align-items-center" style="font-size: 0.8rem; color: var(--text-dark) !important;">
-                    ${bill.title}
+                    ${safeBillTitle}
                     <span onclick="deleteBill(${idx})" class="text-muted ms-2 cursor-pointer small" style="opacity:0.5; font-size: 0.7rem;" title="ลบบิลประจำนี้">🗑️</span>
                 </span>
                 <span class="text-muted small d-block mt-0.5" style="font-size: 0.65rem;">ดิววันที่ ${bill.dueDay} • ${shareText}</span>
