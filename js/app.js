@@ -19,10 +19,10 @@ window.initUserIdentity = function (userId) {
         const sessionTokenKey = Object.keys(localStorage).find(key => key.startsWith('sb-') && key.endsWith('-auth-token'));
         if (sessionTokenKey) {
             const sessionData = JSON.parse(localStorage.getItem(sessionTokenKey));
-            const email = sessionData?.user?.email || '';
-            if (email.includes('boat') || email.includes('vigran')) {
+            const email = (sessionData?.user?.email || '').toLowerCase();
+            if (email === 'vigran.samerpitak@gmail.com') {
                 currentUserRole = 'me';
-            } else if (email) {
+            } else if (email === 'natchapornprompila@gmail.com') {
                 currentUserRole = 'partner';
             }
         }

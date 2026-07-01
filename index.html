@@ -60,6 +60,13 @@
         };
 
         // ⏳ ตรวจสอบ Auth หลังจากระบบ Supabase สตาร์ทเครื่องติดแล้ว
+        // 📧 รายชื่ออีเมลที่ได้รับอนุญาตเข้าใช้งานระบบคู่รัก (Whitelist)
+        const ALLOWED_EMAILS = [
+            'vigran.samerpitak@gmail.com', // คุณโบ๊ท
+            'natchapornprompila@gmail.com'  // คุณเอิร์น
+        ];
+
+        // ⏳ ตรวจสอบ Auth หลังจากระบบ Supabase สตาร์ทเครื่องติดแล้ว
         async function checkUserAuth() {
             setTimeout(async () => {
                 if (typeof supabaseClient === 'undefined') {
@@ -73,23 +80,21 @@
                     session = data.session;
                 } catch (e) { }
 
-                // ข้ามการล็อกอินเพื่อการทดสอบในเครื่องผู้ใช้หรือการพัฒนา
-                const urlParams = new URLSearchParams(window.location.search);
-                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                if (urlParams.get('mock') === 'true' || isLocalhost) {
-                    if (!session) {
-                        session = {
-                            user: {
-                                id: '4ffee1dd-ff34-47c0-a623-7dcc76d80c0f', // รหัสผู้ใช้โบ๊ท
-                                email: 'boat-mock@example.com'
-                            }
-                        };
-                    }
-                }
-
                 if (!session || !session.user || !session.user.id) {
                     window.location.href = 'login.html';
                 } else {
+                    const email = (session.user.email || '').toLowerCase();
+                    if (!ALLOWED_EMAILS.includes(email)) {
+                        alert('ขออภัย บัญชีนี้ไม่มีสิทธิ์เข้าใช้งานระบบกระเป๋าเงินคู่รักครับ');
+                        try {
+                            await supabaseClient.auth.signOut();
+                        } catch (err) {
+                            console.error("Logout failed:", err);
+                        }
+                        window.location.href = 'login.html';
+                        return;
+                    }
+
                     initUserIdentity(session.user.id);
 
                     const overlay = document.getElementById('authOverlay');
