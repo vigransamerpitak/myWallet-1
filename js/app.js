@@ -864,10 +864,10 @@ async function loadTransactions() {
         const netBoat = totalMePaidShared - totalMeActualShare;
 
         if (netBoat > 0.01) {
-            settlementResultText = `🙋‍♀️ ${namePartner} ต้องโอนคืนให้ ${nameMe}: <span class="fw-bold text-warning fs-5">${formatBaht(netBoat)}</span>`;
+            settlementResultText = `🙋‍♀️ ${namePartner} ต้องโอนคืนให้ ${nameMe}: <span class="fw-bold text-warning fs-5">${formatBaht(netBoat)}</span><br><button onclick="settleSharedExpenseDirectly('${namePartner}', '${nameMe}', ${netBoat})" class="btn btn-warning btn-xs py-1 px-3 rounded-pill fw-bold text-dark border-0 shadow-2xs mt-2"><i class="bi bi-lightning-charge-fill me-1"></i> บันทึกโอนเงินคืนแล้ว</button>`;
         } else if (netBoat < -0.01) {
             const diff = Math.abs(netBoat);
-            settlementResultText = `🙋‍♂️ ${nameMe} ต้องโอนคืนให้ ${namePartner}: <span class="fw-bold text-warning fs-5">${formatBaht(diff)}</span>`;
+            settlementResultText = `🙋‍♂️ ${nameMe} ต้องโอนคืนให้ ${namePartner}: <span class="fw-bold text-warning fs-5">${formatBaht(diff)}</span><br><button onclick="settleSharedExpenseDirectly('${nameMe}', '${namePartner}', ${diff})" class="btn btn-warning btn-xs py-1 px-3 rounded-pill fw-bold text-dark border-0 shadow-2xs mt-2"><i class="bi bi-lightning-charge-fill me-1"></i> บันทึกโอนเงินคืนแล้ว</button>`;
         } else {
             settlementResultText = `🤝 ยอดออกเงินสัดส่วนแชร์ร่วมกันลงตัวพอดีเป๊ะครับ!`;
         }
@@ -885,6 +885,47 @@ async function loadTransactions() {
     currentTotalPartnerPaidShared = totalPartnerPaidShared;
     updateInsightsAndProgress();
     updateSortHeadersUI();
+}
+
+async function settleSharedExpenseDirectly(fromName, toName, amount) {
+    const formatAmt = amount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (!(await showCustomConfirm(`ยืนยันบันทึกการโอนเงินคืนจำนวน ${formatAmt} บาท\nจาก ${fromName} ไปยัง ${toName} หรือไม่?\n(ระบบจะสร้างรายการบัญชีให้อัตโนมัติ)`, 'ยืนยันเคลียร์บิล', '🤝'))) return;
+
+    const now = new Date();
+    
+    // แปลงชื่อเป็น owner
+    const nameMe = localStorage.getItem('nameMe') || 'คุณโบ๊ท';
+    const fromOwner = (fromName === nameMe) ? 'me' : 'partner';
+    const toOwner = (toName === nameMe) ? 'me' : 'partner';
+
+    // สร้างรายการรายจ่ายสำหรับผู้โอน
+    const txFrom = {
+        amount: amount,
+        type: 'expense',
+        category_name: 'ทั่วไป',
+        note: `[หักล้างยอดแชร์] คืนเงินกองกลางให้ ${toName}`,
+        owner: fromOwner,
+        created_at: now.toISOString()
+    };
+
+    // สร้างรายการรายรับสำหรับผู้รับโอน
+    const txTo = {
+        amount: amount,
+        type: 'income',
+        category_name: 'ทั่วไป',
+        note: `[หักล้างยอดแชร์] รับเงินคืนกองกลางจาก ${fromName}`,
+        owner: toOwner,
+        created_at: now.toISOString()
+    };
+
+    const { error: errorFrom } = await supabaseClient.from('transactions').insert([txFrom]);
+    if (errorFrom) return showToast(`บันทึกฝั่งผู้โอนล้มเหลว: ${errorFrom.message}`, '❌', true);
+
+    const { error: errorTo } = await supabaseClient.from('transactions').insert([txTo]);
+    if (errorTo) return showToast(`บันทึกฝั่งผู้รับล้มเหลว: ${errorTo.message}`, '❌', true);
+
+    showToast(`บันทึกการหักล้างบิลแชร์เรียบร้อยแล้ว! 🎉`, '🤝');
+    await loadTransactions();
 }
 
 // 2. บันทึกธุรกรรมใหม่ลงฐานข้อมูล
