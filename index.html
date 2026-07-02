@@ -317,89 +317,6 @@
             </div>
 
             <div class="row g-4 mb-4">
-                <div class="col-12 col-md-6">
-                    <div class="card text-white border-0 p-3 shadow-sm"
-                        style="background: linear-gradient(135deg, #4f46e5, #3730a3); border-radius: 24px; min-height: 215px;">
-                        <h6
-                            class="fw-bold mb-2 d-flex align-items-center justify-content-center justify-content-md-start">
-                            <i class="bi bi-calculator-fill me-2"></i> บิลหารครึ่งประจำรอบเดือน
-                        </h6>
-                        <div class="p-2.5 bg-white bg-opacity-10 rounded-4 my-auto text-center">
-                            <div id="billSummaryText" class="small fw-medium mb-0">
-                                <div class="skeleton-pulse py-1">
-                                    <div class="bg-white bg-opacity-25 rounded mx-auto mb-2"
-                                        style="height: 14px; width: 60%;"></div>
-                                    <div class="bg-white bg-opacity-20 rounded mx-auto"
-                                        style="height: 10px; width: 80%;"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-12 col-md-6">
-                    <div class="card bg-white border-0 shadow-xs p-3"
-                        style="border-radius: 24px; border: 1px solid var(--card-border)!important; min-height: 215px; background-color: var(--card-bg) !important; color: var(--color-text);">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="fw-bold text-dark mb-0 d-flex align-items-center"><i
-                                    class="bi bi-trophy-fill text-warning me-2"></i> Checklist ภารกิจเงิน</h6>
-                            <span id="checklistMonthLabel"
-                                class="badge bg-light text-secondary border-0 rounded-pill px-2.5 py-1"
-                                style="font-size: 0.75rem;"></span>
-                        </div>
-                        <div id="goalsList" class="overflow-y-auto pe-1" style="max-height: 150px;">
-                            <div class="skeleton-pulse d-flex flex-column gap-2">
-                                <div class="bg-secondary bg-opacity-10 rounded" style="height: 32px; width: 100%;">
-                                </div>
-                                <div class="bg-secondary bg-opacity-10 rounded" style="height: 32px; width: 100%;">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- เพิ่มภารกิจการเงิน -->
-            <div class="premium-card">
-                <h5 class="fw-bold text-dark mb-3 d-flex align-items-center"><i
-                        class="bi bi-pencil-fill text-indigo me-2"></i> เพิ่มภารกิจใหม่ประจำเดือนปัจจุบัน</h5>
-                <div class="row g-3 align-items-end">
-                    <div class="col-12 col-md-4">
-                        <label for="newGoalTitle"
-                            class="form-label small fw-bold text-secondary mb-1">ชื่อภารกิจการเงิน</label>
-                        <input type="text" id="newGoalTitle" placeholder="เช่น ทริปหัวหิน, ค่าไฟห้อง"
-                            class="form-control">
-                    </div>
-                    <div class="col-12 col-md-4">
-                        <label for="newGoalAmount"
-                            class="form-label small fw-bold text-secondary mb-1">เป้าหมายจำนวนเงิน (บาท)</label>
-                        <input type="number" id="newGoalAmount" placeholder="0.00" class="form-control">
-                    </div>
-                    <div class="col-12 col-md-4">
-                        <label for="newGoalType"
-                            class="form-label small fw-bold text-secondary mb-1">ประเภทภารกิจ</label>
-                        <select id="newGoalType" class="form-select">
-                            <option value="save">🎯 ภารกิจ [ออมเงินเข้าคลังฉุกเฉิน]</option>
-                            <option value="save_travel">✈️ ภารกิจ [ออมเงินเพื่อท่องเที่ยว]</option>
-                            <option value="save_shopping">🛍️ ภารกิจ [ออมเงินเพื่อช้อปปิ้ง/ซื้อของ]</option>
-                            <option value="save_gift">🎁 ภารกิจ [ออมเงินเพื่อของขวัญ/รางวัล]</option>
-                            <option value="save_investment">📈 ภารกิจ [ออมเงินเพื่อลงทุน]</option>
-                            <option value="save_home">🏠 ภารกิจ [ออมเงินเพื่อบ้าน/ที่อยู่อาศัย]</option>
-                            <option value="save_car">🚗 ภารกิจ [ออมเงินเพื่อรถ/ยานพาหนะ]</option>
-                            <option value="save_education">🎓 ภารกิจ [ออมเงินเพื่อการศึกษา]</option>
-                            <option value="save_health">🏥 ภารกิจ [ออมเงินเพื่อสุขภาพ]</option>
-                            <option value="bill">📄 ภารกิจ [บิลรายจ่ายส่วนกลางประจำ]</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="d-flex justify-content-end mt-3">
-                    <button onclick="createNewGoalFrontend()" class="btn btn-indigo px-4 py-2 shadow-xs">➕
-                        เพิ่มภารกิจลงหน้าจอ</button>
-                </div>
-            </div>
-
-            <!-- 📅 บิลรายเดือน & 🏆 ถ้วยรางวัลออมเงิน -->
-            <div class="row g-4 mt-1">
                 <!-- 📅 บิลรายเดือน & บริการรายรอบประจำ -->
                 <div class="col-12 col-md-6">
                     <div class="card bg-white border-0 shadow-xs p-3"
@@ -461,19 +378,74 @@
                     </div>
                 </div>
 
-                <!-- 🏆 ถ้วยรางวัลและความท้าทายออมเงิน -->
+                <!-- 📊 บิลหารครึ่งประจำรอบเดือน -->
                 <div class="col-12 col-md-6">
-                    <div class="card bg-white border-0 shadow-xs p-3"
-                        style="border-radius: 24px; border: 1px solid var(--card-border)!important; min-height: 245px; background-color: var(--card-bg) !important; color: var(--color-text);">
-                        <h6 class="fw-bold text-dark mb-3 d-flex align-items-center"><i
-                                class="bi bi-award-fill text-warning me-2"></i> หอเกียรติยศถ้วยรางวัลการออม (Milestones)
+                    <div class="card text-white border-0 p-3 shadow-sm"
+                        style="background: linear-gradient(135deg, #4f46e5, #3730a3); border-radius: 24px; min-height: 245px; display: flex; flex-direction: column;">
+                        <h6
+                            class="fw-bold mb-2 d-flex align-items-center justify-content-center justify-content-md-start">
+                            <i class="bi bi-calculator-fill me-2"></i> บิลหารครึ่งประจำรอบเดือน
                         </h6>
-                        <div id="coupleMilestonesArea"
-                            class="d-flex flex-wrap gap-2 justify-content-around align-items-center py-1"
-                            style="max-height: 185px; overflow-y: auto;">
-                            <!-- โหลดเหรียญตราและความคืบหน้าไดนามิกผ่าน JS -->
+                        <div class="p-2.5 bg-white bg-opacity-10 rounded-4 my-auto text-center" style="flex-grow: 1; display: flex; align-items: center; justify-content: center;">
+                            <div id="billSummaryText" class="small fw-medium mb-0 w-100">
+                                <div class="skeleton-pulse py-1">
+                                    <div class="bg-white bg-opacity-25 rounded mx-auto mb-2"
+                                        style="height: 14px; width: 60%;"></div>
+                                    <div class="bg-white bg-opacity-20 rounded mx-auto"
+                                        style="height: 10px; width: 80%;"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- เพิ่มภารกิจการเงิน -->
+            <div class="premium-card">
+                <h5 class="fw-bold text-dark mb-3 d-flex align-items-center"><i
+                        class="bi bi-pencil-fill text-indigo me-2"></i> เพิ่มภารกิจใหม่ประจำเดือนปัจจุบัน</h5>
+                <div class="row g-3 align-items-end">
+                    <div class="col-12 col-md-4">
+                        <label for="newGoalTitle"
+                            class="form-label small fw-bold text-secondary mb-1">ชื่อภารกิจการเงิน</label>
+                        <input type="text" id="newGoalTitle" placeholder="เช่น ทริปหัวหิน, ค่าไฟห้อง"
+                            class="form-control">
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label for="newGoalAmount"
+                            class="form-label small fw-bold text-secondary mb-1">เป้าหมายจำนวนเงิน (บาท)</label>
+                        <input type="number" id="newGoalAmount" placeholder="0.00" class="form-control">
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label for="newGoalType"
+                            class="form-label small fw-bold text-secondary mb-1">ประเภทภารกิจ</label>
+                        <select id="newGoalType" class="form-select">
+                            <option value="save">🎯 ภารกิจ [ออมเงินเข้าคลังฉุกเฉิน]</option>
+                            <option value="save_travel">✈️ ภารกิจ [ออมเงินเพื่อท่องเที่ยว]</option>
+                            <option value="save_shopping">🛍️ ภารกิจ [ออมเงินเพื่อช้อปปิ้ง/ซื้อของ]</option>
+                            <option value="save_gift">🎁 ภารกิจ [ออมเงินเพื่อของขวัญ/รางวัล]</option>
+                            <option value="save_investment">📈 ภารกิจ [ออมเงินเพื่อลงทุน]</option>
+                            <option value="save_home">🏠 ภารกิจ [ออมเงินเพื่อบ้าน/ที่อยู่อาศัย]</option>
+                            <option value="save_car">🚗 ภารกิจ [ออมเงินเพื่อรถ/ยานพาหนะ]</option>
+                            <option value="save_education">🎓 ภารกิจ [ออมเงินเพื่อการศึกษา]</option>
+                            <option value="save_health">🏥 ภารกิจ [ออมเงินเพื่อสุขภาพ]</option>
+                            <option value="bill">📄 ภารกิจ [บิลรายจ่ายส่วนกลางประจำ]</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end mt-3">
+                    <button onclick="createNewGoalFrontend()" class="btn btn-indigo px-4 py-2 shadow-xs">➕
+                        เพิ่มภารกิจลงหน้าจอ</button>
+                </div>
+            </div>
+
+            <!-- 🏆 ถ้วยรางวัลและความท้าทายออมเงิน -->
+            <div class="premium-card mt-4">
+                <h5 class="fw-bold text-dark mb-3 d-flex align-items-center"><i
+                        class="bi bi-award-fill text-warning me-2"></i> หอเกียรติยศถ้วยรางวัลการออม (Milestones)</h5>
+                <div id="coupleMilestonesArea"
+                    class="d-flex flex-wrap gap-3 justify-content-around align-items-center py-2">
+                    <!-- โหลดเหรียญตราและความคืบหน้าไดนามิกผ่าน JS -->
                 </div>
             </div>
 
