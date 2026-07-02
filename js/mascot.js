@@ -245,42 +245,51 @@ function updateBearMascotLevel(txs, goals) {
     const synergyEl = document.getElementById('coupleSynergyScore');
     if (synergyEl) {
         let score = 50; // เริ่มต้นที่ 50%
-        
-        // 1. เพิ่มตามปริมาณธุรกรรมที่บันทึก
-        score += Math.min(20, txCount * 0.5); // เพิ่มสูงสุด 20%
-        
-        // 2. เพิ่มตามสัดส่วนความสำเร็จของเควสภารกิจคู่รัก
-        if (goals && goals.length > 0) {
-            const pctCompleted = (completedGoalsCount / goals.length) * 30; // เพิ่มสูงสุด 30%
-            score += pctCompleted;
+        let label = "";
+
+        // ตรวจสอบว่าเป็นบัญชีใหม่หรือเพิ่งเคลียร์ข้อมูลใหม่ทั้งหมดหรือไม่ (ยังไม่มีทั้งธุรกรรม ภารกิจ และเงินออม)
+        const isEmptyState = (txCount === 0 && (!goals || goals.length === 0) && emergencyTotal === 0);
+
+        if (isEmptyState) {
+            score = 50;
+            label = "🌱 เริ่มต้นสร้างอนาคต";
         } else {
-            score += 15; // หากไม่มีเควส ให้แต้มกลางๆ 15%
-        }
-        
-        // 3. เพิ่มตามจำนวนเงินออมสะสมคลังฉุกเฉิน
-        score += Math.min(20, Math.floor(Math.max(0, emergencyTotal) / 2000) * 2); // เพิ่มสูงสุด 20% (ทุกๆ 2000 บ. = +2%)
-        
-        // 4. หักลบคะแนนหากรายจ่ายแชร์ส่วนกลางเกินงบที่ตั้งไว้ (10,000 บ.)
-        let totalSharedExpense = 0;
-        const now = new Date();
-        txs.forEach(tx => {
-            const d = new Date(tx.created_at);
-            if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() && tx.owner === 'shared' && tx.type === 'expense') {
-                totalSharedExpense += parseFloat(tx.amount);
+            // 1. เพิ่มตามปริมาณธุรกรรมที่บันทึก
+            score += Math.min(20, txCount * 0.5); // เพิ่มสูงสุด 20%
+            
+            // 2. เพิ่มตามสัดส่วนความสำเร็จของเควสภารกิจคู่รัก
+            if (goals && goals.length > 0) {
+                const pctCompleted = (completedGoalsCount / goals.length) * 30; // เพิ่มสูงสุด 30%
+                score += pctCompleted;
+            } else {
+                score += 15; // หากไม่มีเควส ให้แต้มกลางๆ 15%
             }
-        });
-        if (totalSharedExpense > 10000) {
-            score -= 15; // หัก 15%
+            
+            // 3. เพิ่มตามจำนวนเงินออมสะสมคลังฉุกเฉิน
+            score += Math.min(20, Math.floor(Math.max(0, emergencyTotal) / 2000) * 2); // เพิ่มสูงสุด 20% (ทุกๆ 2000 บ. = +2%)
+            
+            // 4. หักลบคะแนนหากรายจ่ายแชร์ส่วนกลางเกินงบที่ตั้งไว้ (10,000 บ.)
+            let totalSharedExpense = 0;
+            const now = new Date();
+            txs.forEach(tx => {
+                const d = new Date(tx.created_at);
+                if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() && tx.owner === 'shared' && tx.type === 'expense') {
+                    totalSharedExpense += parseFloat(tx.amount);
+                }
+            });
+            if (totalSharedExpense > 10000) {
+                score -= 15; // หัก 15%
+            }
+            
+            // จำกัดสิทธิ์ให้คะแนนรวมอยู่ในช่วง 10% - 100%
+            score = Math.min(100, Math.max(10, Math.round(score)));
+            
+            label = "🌱 เริ่มต้นสร้างอนาคต";
+            if (score >= 90) label = "🏆 คู่สร้างคู่สมสร้างตัว";
+            else if (score >= 75) label = "💖 คู่หูนักออมใจตรงกัน";
+            else if (score >= 50) label = "🤝 สู้ไปด้วยกัน";
+            else if (score >= 25) label = "⚠️ ชวนคุยเรื่องออมด่วน";
         }
-        
-        // จำกัดสิทธิ์ให้คะแนนรวมอยู่ในช่วง 10% - 100%
-        score = Math.min(100, Math.max(10, Math.round(score)));
-        
-        let label = "🌱 เริ่มต้นสร้างอนาคต";
-        if (score >= 90) label = "🏆 คู่สร้างคู่สมสร้างตัว";
-        else if (score >= 75) label = "💖 คู่หูนักออมใจตรงกัน";
-        else if (score >= 50) label = "🤝 สู้ไปด้วยกัน";
-        else if (score >= 25) label = "⚠️ ชวนคุยเรื่องออมด่วน";
         
         synergyEl.innerText = `${score}% ${label}`;
     }
