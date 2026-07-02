@@ -658,6 +658,7 @@ async function loadTransactions() {
     let myTotal = 0; let partnerTotal = 0; let sharedTotal = 0; let emergencyTotal = 0;
     let totalMePaidShared = 0; let totalPartnerPaidShared = 0;
     let totalMeActualShare = 0; let totalPartnerActualShare = 0;
+    let totalSettledFromPartnerToMe = 0; let totalSettledFromMeToPartner = 0;
     let categorySummary = {}; let incomeSummary = {}; let totalExpenseFiltered = 0; let totalIncomeFiltered = 0;
     const now = new Date(); const thisMonth = now.getMonth(); const thisYear = now.getFullYear();
 
@@ -701,6 +702,16 @@ async function loadTransactions() {
         if (filterDate === 'this-month') { if (txDate.getMonth() !== thisMonth || txDate.getFullYear() !== thisYear) return; isCurrentFilterMonth = true; }
         else if (filterDate === 'last-month') { let targetMonth = thisMonth - 1; let targetYear = thisYear; if (targetMonth < 0) { targetMonth = 11; targetYear--; } if (txDate.getMonth() !== targetMonth || txDate.getFullYear() !== targetYear) return; isCurrentFilterMonth = true; }
         else { isCurrentFilterMonth = true; }
+
+        if (isCurrentFilterMonth && tx.note && tx.note.includes('[หักล้างยอดแชร์]')) {
+            if (tx.type === 'expense') {
+                if (tx.owner === 'me') {
+                    totalSettledFromMeToPartner += txAmount;
+                } else if (tx.owner === 'partner') {
+                    totalSettledFromPartnerToMe += txAmount;
+                }
+            }
+        }
 
         if (isCurrentFilterMonth && tx.type === 'expense') {
             let mePct = 50;
@@ -861,7 +872,7 @@ async function loadTransactions() {
     } else {
         const grandSharedExpense = totalMePaidShared + totalPartnerPaidShared;
         let settlementResultText = "";
-        const netBoat = totalMePaidShared - totalMeActualShare;
+        const netBoat = (totalMePaidShared - totalMeActualShare) + totalSettledFromMeToPartner - totalSettledFromPartnerToMe;
 
         if (netBoat > 0.01) {
             settlementResultText = `🙋‍♀️ ${namePartner} ต้องโอนคืนให้ ${nameMe}: <span class="fw-bold text-warning fs-5">${formatBaht(netBoat)}</span><br><button onclick="settleSharedExpenseDirectly('${namePartner}', '${nameMe}', ${netBoat})" class="btn btn-warning btn-xs py-1 px-3 rounded-pill fw-bold text-dark border-0 shadow-2xs mt-2"><i class="bi bi-lightning-charge-fill me-1"></i> บันทึกโอนเงินคืนแล้ว</button>`;
